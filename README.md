@@ -1,2 +1,0 @@
-# wiz-stock
-KDT Project
