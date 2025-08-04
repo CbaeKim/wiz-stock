@@ -4,10 +4,16 @@ cd [directory]
 # 2. 작업 디렉터리를 git 저장소로 설정
 git clone https://github.com/CbaeKim/wiz-stock.git
 
-# 3. 깃허브 repository에 업로드
+# 3. 원격 저장소에 코드 업로드
 git add ./[파일명]
 git commit -m '파일 업로드 사유'
 git push
+
+# 4. 원격 저장소에서 최신 코드 다운로드
+-> fetch : 변경사항 확인
+-> merge : 변경사항을 내 작업 디렉터리에 적용
+git fetch origin main
+git merge origin/main
 
 //**주의사항**//
 - 반드시 작업한 파일 명만 add -> commit -> push 합니다.
