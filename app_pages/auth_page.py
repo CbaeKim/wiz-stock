@@ -38,7 +38,8 @@ def login_page():
 
                     # 정상적으로 서버와 통신이 완료되었을 경우
                     if response.status_code == 200:
-
+                        
+                        # response body -> json 형태로 파싱
                         data = response.json()
 
                         if 'message' in data and data['message'] == 'LoginSuccess':
