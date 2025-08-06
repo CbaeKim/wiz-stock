@@ -15,8 +15,6 @@ def initialize_session_state():
         st.session_state.points = 0
     if "my_trophies" not in st.session_state:
         st.session_state.my_trophies = []
-    if "nickname_color" not in st.session_state:
-        st.session_state.nickname_color = "#000000"
     if "daily_point_bonus" not in st.session_state:
         st.session_state.daily_point_bonus = 0
     if "last_ad_watch_time" not in st.session_state:
@@ -45,3 +43,5 @@ def initialize_session_state():
         st.session_state.last_answer_result = None
     if "menu_choice" not in st.session_state:
         st.session_state.menu_choice = "메인"
+    if "analysis_requests" not in st.session_state:
+        st.session_state.analysis_requests = {}

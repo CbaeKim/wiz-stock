@@ -75,13 +75,15 @@ def community_page():
         col1, col2 = st.columns(2)
         with col1:
             if st.button("수정 완료"):
-                if title and content:
+                if title and content and len(content) <= 500:
                     editing_post["title"] = title
                     editing_post["content"] = content
                     editing_post["date"] = date.today()
                     st.session_state.editing_post_id = None
                     st.success("게시글이 수정되었습니다.")
                     st.rerun()
+                elif len(content) > 500:
+                    st.error("게시글 내용은 500자 이내로 작성해주세요")
                 else:
                     st.error("제목과 내용을 모두 입력해주세요.")
         with col2:
@@ -91,9 +93,10 @@ def community_page():
                 st.rerun()
     else:
         title = st.text_input("제목", key="new_title")
-        content = st.text_area("내용", key="new_content")
+        content = st.text_area("내용", key="new_content", max_chars=500)
+
         if st.button("등록"):
-            if title and content:
+            if title and content and len(500) <= 500:
                 st.session_state.posts.append({
                     "id": str(uuid.uuid4()),
                     "title": title,
@@ -104,5 +107,7 @@ def community_page():
                 })
                 st.success("게시글이 등록되었습니다.")
                 st.rerun()
+            elif len(content) > 500:
+                st.error("게시글 내용은 500자 이내로 작성해주세요.")
             else:
                 st.error("제목과 내용을 모두 입력해주세요.")

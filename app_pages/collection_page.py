@@ -8,12 +8,11 @@ def collection_page():
 
     if "my_trophies" not in st.session_state:
         st.session_state.my_trophies = []
-    if "nickname_color" not in st.session_state:
-        st.session_state.nickname_color = "#000000"
     if "daily_point_bonus" not in st.session_state:
         st.session_state.daily_point_bonus = 0
         
     # 트로피 메타 정보
+    # 트로피별 이름, 설명, 희귀도, 색상, 포인트 보너스 
     trophies = {
         "quiz_master_7days": {
             "name": "퀴즈 마스터 (7일 연속)",
@@ -50,7 +49,7 @@ def collection_page():
     }
 
 
-    # 예: 오늘 획득 점수 20 이상 -> daily_champion 조건 충족
+    # 트로피 획득 조건
     today = date.today().isoformat()
     points_today = st.session_state.get("study_log", {}).get(today, {}).get("point", 0)
     continuous_days = st.session_state.get("quiz_continuous_days", 0)  # 예: 연속 달성 일 수 저장 필요
@@ -68,7 +67,7 @@ def collection_page():
     # 조건: 하루 50점 이상 → unique_learner 가능
     if points_today >= 50 and "unique_learner" not in st.session_state.my_trophies:
         available_trophies.append("unique_learner")
- 
+    
     # 조건: 30일 연속 달성 → unique_learner 가능
     if continuous_days >= 30 and "legendary_investor" not in st.session_state.my_trophies:
         available_trophies.append("legendary_investor")
@@ -105,13 +104,13 @@ def collection_page():
                     <small>{trophy['description']}</small>
                 </div>
             """, unsafe_allow_html=True)
-
+            
+            # 트로피 획득 버튼 생성
             if st.button(f"🏅 '{trophy['name']}' 획득하기", key=f"get_{trophy_key}"):
-                # 트로피 추가
                 st.session_state.my_trophies.append(trophy_key)
                 st.success(f"'{trophy['name']}' 트로피를 획득했습니다! 🎉")
 
-                # 닉네임 색상 및 포인트 보너스 처리
+                # 획득한 훈장 등급에 따라 닉네임 색상 및 일일 포인트 보너스 설정
                 if trophy["rarity"] == "유니크":
                     st.session_state.nickname_color = trophy["color"]
                     st.session_state.daily_point_bonus += trophy["unique_point_bonus"]
@@ -121,9 +120,8 @@ def collection_page():
                     st.session_state.daily_point_bonus += trophy["legend_point_bonus"]
                     st.info("레전드 등급 획득! 닉네임 색상이 변경되고, 일 2포인트 추가 보너스를 받습니다.")
 
-                # 획득 가능한 리스트에서 제거
+                # 획득 가능한 리스트에서 제거하고 페이지를 다시 로드하여 변경사항 적용
                 st.session_state.available_trophies.remove(trophy_key)
-
                 st.rerun()
     else:
         st.write("현재 획득 가능한 트로피가 없습니다.")
@@ -132,12 +130,17 @@ def collection_page():
     st.markdown("---")
     st.subheader("👤 닉네임")
 
-    user_name = st.session_state.get("user_id", "익명")
-    color = st.session_state.nickname_color
-    st.markdown(f'<span style="color:{color}; font-weight:bold; font-size:24px;">{user_name}</span>', unsafe_allow_html=True)
+    user_name = st.session_state.get("nickname", "익명")
+    color = st.session_state.get("nickname_color", None)
+
+    # 닉네임 색상이 설정된 경우에만 스타일 적용
+    if color:
+        style_tag = f'style="color:{color};"'
+    else:
+        style_tag = ""
+    
+    st.markdown(f'<span {style_tag}>{user_name}</span>', unsafe_allow_html=True)
 
     # --- 일일 추가 포인트 보너스 표시 ---
     st.markdown("---")
     st.write(f"💡 일일 추가 포인트 보너스: **{st.session_state.daily_point_bonus}점**")
-
-

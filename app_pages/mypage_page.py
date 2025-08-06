@@ -12,8 +12,6 @@ def mypage_content():
         st.session_state.points = 0
     if "nickname" not in st.session_state:
         st.session_state.nickname = "익명"
-    if "nickname_color" not in st.session_state:
-        st.session_state.nickname_color = "#000000"
     if "daily_point_bonus" not in st.session_state:
         st.session_state.daily_point_bonus = 0
     if "my_trophies" not in st.session_state:
@@ -24,12 +22,18 @@ def mypage_content():
     user_id = st.session_state.user_id
     total_points = st.session_state.points
     nickname = st.session_state.nickname
-    nickname_color = st.session_state.nickname_color
+    nickname_color = st.session_state.get("nickname_color", None)
     daily_bonus = st.session_state.daily_point_bonus
     my_trophies = st.session_state.my_trophies
     purchased_indicators = st.session_state.purchased_indicators
 
-    st.markdown(f"**닉네임:** <span style='color:{nickname_color}; font-weight:bold;'>{nickname}</span>", unsafe_allow_html=True)
+    # nickname_color가 있을 경우에만 color 스타일을 적용
+    if nickname_color:
+        nickname_style_tag = f'style="color:{nickname_color};"'
+    else:
+        nickname_style_tag = ""
+
+    st.markdown(f"**닉네임:** <span {nickname_style_tag}>{nickname}</span>", unsafe_allow_html=True)
     st.markdown(f"**아이디:** {user_id}")
     st.markdown(f"**총 보유 포인트:** {total_points}점")
     st.markdown(f"**일일 추가 포인트 보너스:** {daily_bonus}점")
