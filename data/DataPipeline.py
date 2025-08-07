@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import time
 from datetime import datetime, timedelta
 from GetData import analyze_data
 from supabase import Client, create_client
@@ -57,6 +58,38 @@ def insert_rows(df_list):
 
     return response
 
+def table_to_csv(table_name, path, batch_size = 1000):
+    """ 모든 테이블 조회 후 CSV 파일로 저장 """
+    all_data = []
+    offset = 0
+
+    while True:
+        try:
+            response = supabase.table(table_name).select('*').range(offset, offset + batch_size-1).execute()
+            chunk = response.data
+
+            if len(chunk) < batch_size:
+                print("Success load all data")
+                all_data.extend(chunk)
+                break
+
+            all_data.extend(chunk)
+
+            offset += batch_size
+
+        except Exception as e:
+            print(f"Data load error: {e}")
+            break
+    
+    if all_data:
+        df = pd.DataFrame(all_data)
+        df.to_csv(path)
+        print("Save Success")
+
+        return df
+    else:
+        return print("No data")
+
 if __name__=="__main__":
 
     # 시가 총액 기준 주식 Top 10 리스트
@@ -81,4 +114,6 @@ if __name__=="__main__":
         print(validation(response))
     except:
         print("None")
-    
+
+    # 최종 데이터 CSV 파일로 저장
+    df = table_to_csv('technical_data', path = './data/stock_data.csv')
