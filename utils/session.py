@@ -1,5 +1,3 @@
-### 세션 상태 초기화
-
 import streamlit as st
 
 def initialize_session_state():
@@ -21,14 +19,30 @@ def initialize_session_state():
         st.session_state.last_ad_watch_time = None
     if "ad_cooldown_active" not in st.session_state:
         st.session_state.ad_cooldown_active = False
-    if "game_reset" not in st.session_state:
-        st.session_state.game_reset = True
-    if "users" not in st.session_state:
-        st.session_state.users = {"test_user": {"password": "test_password", "nickname": "테스트 유저"}}
+    if "game_state" not in st.session_state: 
+        st.session_state.game_state = "initial"
+    if "secret_number" not in st.session_state: 
+        st.session_state.secret_number = 0
+    if "guesses" not in st.session_state: 
+        st.session_state.guesses = 0
+    if "game_message" not in st.session_state: 
+        st.session_state.game_message = ""
     if "game_cooldown_start_time" not in st.session_state:
         st.session_state.game_cooldown_start_time = None
-    if "game_over" not in st.session_state:
-        st.session_state.game_over = False
+    if "last_guess_value" not in st.session_state: 
+        st.session_state.last_guess_value = 50
+    if "game_over_reason" not in st.session_state:
+        st.session_state.game_over_reason = ""
+    if "last_attendance_date" not in st.session_state:
+        st.session_state.last_attendance_date = None
+    if "consecutive_days" not in st.session_state:
+        st.session_state.consecutive_days = 0
+    if "attendance_points_today_given" not in st.session_state:
+        st.session_state.attendance_points_today_given = False
+    if "study_log" not in st.session_state:
+        st.session_state.study_log = {}
+    if "users" not in st.session_state:
+        st.session_state.users = {"test_user": {"password": "test_password", "nickname": "테스트 유저"}}
     if "weekly_rankings" not in st.session_state:
         st.session_state.weekly_rankings = {}
     if "last_payout_week" not in st.session_state:
