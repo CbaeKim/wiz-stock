@@ -13,7 +13,7 @@ cd [directory]
 # 2. 작업 디렉터리를 git 저장소로 설정
 git clone https://github.com/CbaeKim/wiz-stock.git
 
-# 3. 원격 저장소에서 최신 코드 다운로드
+# 3. 원격 저장소에서 최신 코드 다운로드 (최초 X)
 -> fetch : 변경사항 확인
 -> merge : 변경사항을 내 작업 디렉터리에 적용
 git fetch origin main
