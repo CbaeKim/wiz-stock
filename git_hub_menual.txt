@@ -13,17 +13,22 @@ cd [directory]
 # 2. 작업 디렉터리를 git 저장소로 설정
 git clone https://github.com/CbaeKim/wiz-stock.git
 
-# 3. 원격 저장소에서 최신 코드 다운로드 (최초 X)
+# 3-1. 원격 저장소에서 최신 코드 다운로드 (첫 실행 시에만 명령 실행)
+git pull origin main
+
+# 3-2. 최초 실행 이후 최신 코드 다운로드
 -> fetch : 변경사항 확인
 -> merge : 변경사항을 내 작업 디렉터리에 적용
 git fetch origin main
 git merge origin/main
 
-# 4. 원격 저장소에 코드 업로드
-git add ./[파일명]
-git commit -m '파일 업로드 사유'
-git push
+===========================================================
 
 //**주의사항**//
 - 반드시 작업한 파일 명만 add -> commit -> push 합니다.
 - 잘못된 파일이 업로드 될 경우 문제가 생길 수 있음
+
+# 4. 원격 저장소에 코드 업로드
+git add ./[파일명]
+git commit -m '파일 업로드 사유'
+git push
