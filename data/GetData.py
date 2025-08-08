@@ -248,7 +248,6 @@ def analyze_data(ticker_symbol, period="max", start_date = None):
     if not isinstance(df, pd.DataFrame):
         today = datetime.now().strftime('%Y-%m-%d')
         return print(f"DB is latest: {today}")
-    # 기술적 분석 지표 계산 및 DataFrame에 추가
 
     # 이동 평균선 (SMA, EMA)
     try:

@@ -13,16 +13,16 @@ SUPABASE_KEY = 'sb_secret_5rUltxbkuiB3wFcTyMs1qw_cJHFo3kf'
 # 클라이언트 연결
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("Supabase 클라이언트 연결 완료.")
+    print("Supabase Client connections is Success.")
 except Exception as e:
-    print(f"Supabase 클라이언트 연결 실패: {e}")
+    print(f"Connection Error: {e}")
 
 def validation(response):
     """ Supabase Data 조작 완료 검증 함수 """
     if response.data:
-        print("데이터베이스 적용 완료")
+        print("DB Update Success")
     else:
-        print("코드를 재확인해주세요.")
+        print("Please check your code")
 
 def get_recent_date(stock_list):
     """ 입력받은 Stock List Dict의 가장 최근 데이터의 날짜 딕셔너리 반환 """
@@ -74,6 +74,7 @@ def get_stocks_top_10(stocks_list):
         if today == recent_date:
             print(f"DB is latest: {today}")
 
+        # Initial Data
         elif recent_date == "max":
             df = analyze_data(stock_code, period = 'max')
             df_list.append(df)
