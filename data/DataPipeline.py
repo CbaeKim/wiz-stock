@@ -24,30 +24,68 @@ def validation(response):
     else:
         print("코드를 재확인해주세요.")
 
+def get_recent_date(stock_list):
+    """ 입력받은 Stock List Dict의 가장 최근 데이터의 날짜 딕셔너리 반환 """
+    stock_codes = [stock['code'][:-3] for stock in stock_list]
+    stock_recent_dates = []
+    stock_dict = {'code': stock_codes}
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    # loop: return stock_dict
+    for stock_code in stock_codes:
+        recent_date = (
+            supabase.from_('technical_data')
+            .select('Date', 'stock_code')
+            .eq('stock_code', stock_code)
+            .order('Date', desc= True)
+            .limit(1)
+            .execute().data
+        )
+        
+        # Get recent Date & None Data Classification
+        if len(recent_date) == 0:
+            stock_recent_dates.append("max")
+            print(f"[{today}] max priod data append success")
+        else:
+            stock_recent_dates.append(recent_date[0]["Date"])
+            print(f"[{today}] date append success")
+    
+    # update dictionary key: value
+    stock_dict['recent_date'] = stock_recent_dates
+
+    return stock_dict
+
 def get_stocks_top_10(stocks_list):
     """ analyze_data 함수 실행 """
-    # 데이터베이스에서 가장 최신의 Date 컬럼값 반환
-    get_date = supabase.from_('technical_data').select('Date').order('Date', desc = True).limit(1).execute().data
+    # 전역 변수 정의
+    repeat_value = len(stocks_list)
+    stock_dict = get_recent_date(stocks_list)
+    df_list = []
 
-    # 서버 최초 실행이 아닐 경우 가장 최근 날짜 기준으로 데이터 삽입
-    if len(get_date) >= 1:
-        recent_date = get_date[0]['Date']
+    # Today Date (ex. '2025-08-08')
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    for i in range(repeat_value):
+        stock_code = stock_dict['code'][i]+'.KS'
+        recent_date = stock_dict['recent_date'][i]
+        recent_date_tr = datetime.strptime(recent_date, '%Y-%m-%d')
+
+        # No Data in database
+        if today == recent_date:
+            print(f"DB is latest: {today}")
+
+        elif recent_date == "max":
+            df = analyze_data(stock_code, period = 'max')
+            df_list.append(df)
         
-        today = datetime.now().strftime('%Y-%m-%d')
-
-        # 최신 데이터가 오늘일 경우 실행
-        if recent_date == today:
-            return print("[NOTICE] The database data is up to date.")
-        
-        # 날짜 연산 실행
-        recent_date = datetime.strptime(recent_date, '%Y-%m-%d')
-        recent_date = recent_date + timedelta(days = 1)
-        start_date = recent_date.strftime('%Y-%m-%d')
-
-        return [analyze_data(stock['code'], start_date = start_date) for stock in top_10_stocks]
-    # 서버 최초 실행일 경우
-    else:
-        return [analyze_data(stock['code']) for stock in top_10_stocks]
+        # Recent Data Update
+        else:
+            insert_date = recent_date_tr + timedelta(days = 1)  # Date + 1
+            start_date = insert_date.strftime('%Y-%m-%d')       # datetime >> str
+            df = analyze_data(stock_code, start_date = start_date)
+            df_list.append(df)
+    
+    return df_list
 
 def insert_rows(df_list):
     """ 데이터프레임을 supabase technical_data 테이블에 업로드 """

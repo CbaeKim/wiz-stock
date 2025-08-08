@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import yfinance as yf
+from datetime import datetime
 
 def get_data(ticker_symbol, period="1y", first_execute = True, date = None):
     try:
@@ -242,8 +243,11 @@ def analyze_data(ticker_symbol, period="max", start_date = None):
         else:
             df = get_data(ticker_symbol, first_execute = False, date = start_date)
     except:
-        raise Exception("Error get_data fucnction")
+        raise Exception("Error get_data function")
 
+    if not isinstance(df, pd.DataFrame):
+        today = datetime.now().strftime('%Y-%m-%d')
+        return print(f"DB is latest: {today}")
     # 기술적 분석 지표 계산 및 DataFrame에 추가
 
     # 이동 평균선 (SMA, EMA)
