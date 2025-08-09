@@ -3,13 +3,15 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from datetime import datetime
+from SupabaseHandle import request_table, insert_rows
+import os
 
-def get_data(ticker_symbol, period="1y", first_execute = True, date = None):
+def get_data(ticker_symbol, period="max", date = None):
     try:
         # yfinance 객체 생성
         ticker = yf.Ticker(ticker_symbol)
 
-        if first_execute is True:
+        if date is None:
             # 주가 데이터 가져오기
             df = ticker.history(period=period)
         else:
@@ -23,6 +25,62 @@ def get_data(ticker_symbol, period="1y", first_execute = True, date = None):
     except Exception as e:
         print(f"Error: {e}")
         return None
+
+def get_all_stock_data(stock_dict, start_date = None):
+    """ Get all Stock Dictionary data """
+    file_path = './stock_data_cache.csv'
+
+    stock_codes = [stock['code'][:-3] for stock in stock_dict]
+
+    stock_df_lists = []
+
+    for stock_code in stock_codes:
+        # Get Data
+        df = get_data(stock_code + '.KS', period='max')
+
+        # Data Reprocess
+        df.insert(loc = 0, column = 'stock_code', value = stock_code)
+        df.reset_index(inplace = True)
+        df['Date'] = pd.to_datetime(df['Date'], errors = 'coerce')
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+        df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
+        
+        stock_df_lists.append(df)
+    
+    final_df = pd.concat(stock_df_lists, ignore_index = True)
+    final_df.to_csv(file_path, index = False)
+    print("Save CSV Success")
+    
+    return final_df
+
+def preprocess_csv(file_path):
+    """ Load CSV >> 'stock_code' padding to zero """
+    local_table = pd.read_csv(file_path)
+    local_table['stock_code'] = local_table['stock_code'].astype(str).str.zfill(6)
+    return local_table
+
+def extract_unique_rows():
+    """ Extract Unique rows """
+    # Filter Stock code rows
+    get_table = request_table('technical_data')
+    local_table = preprocess_csv('./stock_data.csv')
+
+    # Extract Common Columns
+    t_columns = set(get_table.columns)
+    l_columns = set(local_table)
+    columns = list(t_columns & l_columns)
+
+    # Uniform Column order
+    table_columns = list(local_table.columns)
+    get_table = get_table[table_columns]
+
+    # Extract Unique rows
+    new_data_rows = (
+        pd.concat([get_table[columns], local_table[columns]]).reset_index(drop = True)
+        .drop_duplicates(subset = ['Date', 'stock_code'], keep = False)
+        )
+
+    return new_data_rows, get_table, local_table
 
 # 이동평균선 구하는 함수 정의
 def get_ma(df, close_col, ma_value, ma):
@@ -234,20 +292,10 @@ def get_obv(df, close_col, volume_col):
 
     return pd.Series(obv, index = df.index)
 
-def analyze_data(ticker_symbol, period="max", start_date = None):
+def get_technical_data():
     """ 주가 데이터 Load & 기술적 분석 지표를 계산 후 DataFrame으로 반환 """
-    # get_data 함수를 사용하여 주가 데이터 불러오기 및 전처리
-    try:
-        if start_date is None:
-            df = get_data(ticker_symbol, period=period)
-        else:
-            df = get_data(ticker_symbol, first_execute = False, date = start_date)
-    except:
-        raise Exception("Error get_data function")
-
-    if not isinstance(df, pd.DataFrame):
-        today = datetime.now().strftime('%Y-%m-%d')
-        return print(f"DB is latest: {today}")
+    df = pd.read_csv('./data/stock_data_cache.csv')
+    df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
 
     # 이동 평균선 (SMA, EMA)
     try:
@@ -314,9 +362,7 @@ def analyze_data(ticker_symbol, period="max", start_date = None):
         print(f"Error OBV: {e}")
 
     # Final DataFrame Reprocess
-    df = df.reset_index()
     df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
-    df.insert(0, 'stock_code', ticker_symbol[:-3], allow_duplicates = False)
     df = df.replace(np.nan, 0)
 
     change_columns = ['Open', 'High', 'Low', 'Close',
@@ -325,5 +371,6 @@ def analyze_data(ticker_symbol, period="max", start_date = None):
        'Bollinger_Lower', 'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 
     df[change_columns] = df[change_columns].round(2)
+    df.to_csv('./data/stock_data.csv', index = False)
     
     return df
