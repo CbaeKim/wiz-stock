@@ -294,7 +294,7 @@ def get_obv(df, close_col, volume_col):
 
 def get_technical_data():
     """ 주가 데이터 Load & 기술적 분석 지표를 계산 후 DataFrame으로 반환 """
-    df = pd.read_csv('./data/stock_data_cache.csv')
+    df = pd.read_csv('./stock_data_cache.csv')
     df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
 
     # 이동 평균선 (SMA, EMA)
@@ -371,6 +371,6 @@ def get_technical_data():
        'Bollinger_Lower', 'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 
     df[change_columns] = df[change_columns].round(2)
-    df.to_csv('./data/stock_data.csv', index = False)
+    df.to_csv('./stock_data.csv', index = False)
     
     return df

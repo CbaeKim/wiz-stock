@@ -1,8 +1,5 @@
 import pandas as pd
-import numpy as np
-import yfinance as yf
-import time
-from datetime import datetime, timedelta
+import FinanceDataReader as fdr
 from GetData import get_all_stock_data, get_technical_data, extract_unique_rows
 from SupabaseHandle import insert_rows
 from supabase import Client, create_client
@@ -26,20 +23,18 @@ def validation(response):
         print("Please check your code")
 
 if __name__=="__main__":
-    # 시가 총액 기준 주식 Top 10 리스트
-    top_10_stocks = [
-        {'name': '삼성전자', 'code': '005930.KS'},
-        {'name': 'SK하이닉스', 'code': '000660.KS'},
-        {'name': 'LG에너지솔루션', 'code': '373220.KS'},
-        {'name': '삼성바이오로직스', 'code': '207940.KS'},
-        {'name': '한화에어로스페이스', 'code': '012450.KS'},
-        {'name': '삼성전자우', 'code': '005935.KS'},
-        {'name': '현대차', 'code': '005380.KS'},
-        {'name': 'KB금융', 'code': '105560.KS'},
-        {'name': '두산에너빌리티', 'code': '034020.KS'},
-        {'name': 'HD현대중공업', 'code': '329180.KS'},
-    ]
+    # market capitalization Top 10
+    krx_df = fdr.StockListing('KRX').sort_values(by = 'Marcap', ascending = False)
+    print("KRX Data Mining Success")
 
+    # KRX Data Preprocess
+    top_10 = krx_df[:10][['Code', 'Name']]
+    top_10.rename(columns = {'Code': 'code', 'Name': 'name'}, inplace = True)
+    top_10 = top_10[['name', 'code']]
+    top_10['code'] = top_10['code'] + '.KS'
+    top_10_stocks = top_10.to_dict('records')
+    print("KRX Top 10 Data Preprocess Success")
+    
     # create 'stock_data_cache.csv' : All Stock Data Mining result
     new_data = get_all_stock_data(top_10_stocks)
 
@@ -47,12 +42,15 @@ if __name__=="__main__":
     get_technical_data()
 
     try:
-        # Extract Unique rows >> Insert rows >> save 'stock_data.csv'
+        # 1. Compare new_data and stock_data.csv
+        # 2. Insert compare result rows
+        # 3. save 'stock_data.csv'
         new_rows = extract_unique_rows()
         insert_rows([new_rows])
         print("Data update success")
 
     except:
+        # Extract the sample DB and check its existence.
         select_table = supabase.from_('technical_data').select('*').execute()
 
         if len(select_table.data) == 0:
