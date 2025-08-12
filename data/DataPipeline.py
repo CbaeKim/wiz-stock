@@ -1,6 +1,7 @@
 import pandas as pd
 import FinanceDataReader as fdr
 from GetData import get_all_stock_data, get_technical_data, extract_unique_rows
+from GetNews import GetNewsData, combine_json_files
 from SupabaseHandle import insert_rows
 from supabase import Client, create_client
 
@@ -34,6 +35,8 @@ if __name__=="__main__":
     top_10['code'] = top_10['code'] + '.KS'
     top_10_stocks = top_10.to_dict('records')
     print("KRX Top 10 Data Preprocess Success")
+
+    print(top_10_stocks[0]['name'])
     
     # create 'stock_data_cache.csv' : All Stock Data Mining result
     new_data = get_all_stock_data(top_10_stocks)
@@ -46,7 +49,7 @@ if __name__=="__main__":
         # 2. Insert compare result rows
         # 3. save 'stock_data.csv'
         new_rows = extract_unique_rows()
-        insert_rows([new_rows])
+        insert_rows([new_rows[0]])
         print("Data update success")
 
     except:
@@ -60,3 +63,11 @@ if __name__=="__main__":
         
         else:
             print("DB is latest")
+
+    # Get News Data
+    collect = GetNewsData()
+
+    stock_names = [stock['name'] for stock in top_10_stocks]
+    
+    for stock_name in stock_names:
+        collect.run(query = stock_name, start = 1)

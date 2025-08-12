@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from datetime import datetime
+from pathlib import Path
 from SupabaseHandle import request_table, insert_rows
 import os
 
@@ -28,7 +29,8 @@ def get_data(ticker_symbol, period="max", date = None):
 
 def get_all_stock_data(stock_dict, start_date = None):
     """ Get all Stock Dictionary data """
-    file_path = './stock_data_cache.csv'
+    current_path = Path.cwd()
+    file_path = current_path.parent / '*stock_data_cache.csv'
 
     stock_codes = [stock['code'][:-3] for stock in stock_dict]
 
@@ -63,7 +65,9 @@ def extract_unique_rows():
     """ Extract Unique rows """
     # Filter Stock code rows
     get_table = request_table('technical_data')
-    local_table = preprocess_csv('./stock_data.csv')
+    current_path = Path.cwd()
+    file_path = current_path.parent / '*stock_data_cache.csv'
+    local_table = preprocess_csv(file_path)
 
     # Extract Common Columns
     t_columns = set(get_table.columns)
@@ -294,7 +298,9 @@ def get_obv(df, close_col, volume_col):
 
 def get_technical_data():
     """ 주가 데이터 Load & 기술적 분석 지표를 계산 후 DataFrame으로 반환 """
-    df = pd.read_csv('./stock_data_cache.csv')
+    current_path = Path.cwd()
+    file_path = current_path.parent / '*stock_data_cache.csv'
+    df = pd.read_csv(file_path)
     df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
 
     # 이동 평균선 (SMA, EMA)
@@ -371,6 +377,6 @@ def get_technical_data():
        'Bollinger_Lower', 'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 
     df[change_columns] = df[change_columns].round(2)
-    df.to_csv('./stock_data.csv', index = False)
+    df.to_csv(file_path, index = False)
     
     return df
