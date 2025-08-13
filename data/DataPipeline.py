@@ -75,7 +75,6 @@ if __name__=="__main__":
     # Get Naver News Page (1 value = 25 page)
     get_page_value = 1
     
-    print(stock_names)
     # Get News Data Sentimental-Analysis Result >> ./cache/~.json
     for stock_name in stock_names:
         collect.run(query = stock_name, get_page_value = get_page_value)

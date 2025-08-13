@@ -2,3 +2,4 @@
 .env
 test.ipynb
 gem_api.ipynb
+__pycache__
