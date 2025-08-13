@@ -1,8 +1,25 @@
+import os, requests, json, re, time
 import google.generativeai as genai
 from pathlib import Path
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-import os, requests, json, re, time
+
+# Load Parent Path
+current_path = Path.cwd()
+env_path = current_path / '.env'
+
+load_dotenv(dotenv_path = env_path)
+
+# Set Gemini API KEY
+genai.configure(api_key = os.getenv('GEMINI_API_KEY'))
+
+try:
+    # Naver Developer API Configuration
+    client_id = os.getenv('NAVER_CLIENT_ID')
+    client_secret = os.getenv('NAVER_CLIENT_SECRET')
+    print("API Configuration Load Success")
+except Exception as e:
+    print(f"API Configuration Load Error: {e}")
 
 def request_gem(text: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
     """ Get Reponse from Gemini """
@@ -20,24 +37,6 @@ def request_gem(text: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
     )
 
     return response.text
-
-# Load Parent Path
-current_path = Path(os.getcwd())
-parent_path = current_path.parent / '.env'
-
-load_dotenv(dotenv_path = parent_path)
-
-# Set Gemini API KEY
-genai.configure(api_key = os.getenv('GEMINI_API_KEY'))
-
-try:
-    # Naver Developer API Configuration
-    client_id = os.getenv('NAVER_CLIENT_ID')
-    client_secret = os.getenv('NAVER_CLIENT_SECRET')
-    print("API Configuration Load Success")
-except Exception as e:
-    print(f"API Configuration Load Error: {e}")
-
 
 class GetNewsData():
     def __init__(self, client_id = client_id, client_secret = client_secret):
@@ -134,21 +133,22 @@ class GetNewsData():
         part = '[next_news]'.join(results)
 
         prompt_text = """
-        너는 경제 뉴스 분석 전문가야.
-        뉴스에 대해서 감성분석해줄래? 총 100개의 뉴스가 있어.
-        각 뉴스는 '[next_news]' 문자로 구분되어있어.
-        하나의 뉴스가 끝나면 다음 뉴스는 '[next_news]'로 시작해.
+        너는 경제 뉴스 분석 전문가다.
+        아래 입력된 뉴스들에 대해 감성분석을 수행하라.
+        각 뉴스는 문자열 "[next_news]"로 구분되어 있다.
+        뉴스 분석 시, 하나의 뉴스가 끝나면 다음 뉴스는 "[next_news]"로 시작한다.
 
-        [지시 사항]
-        1. 감성분석 결과는 뉴스기사의 날짜와 점수로 산정해줘
-        - positive: 51 ~ 100점 / negative: 1 ~ 50점
+        [분석 규칙]
+        1. 감성 점수 범위:
+        - 긍정(positive): 51 ~ 100점
+        - 부정(negative): 1 ~ 50점
+        2. 분석 결과는 각 뉴스의 날짜와 점수로만 표현하라.
+        3. 반드시 JSON 배열 형식으로 출력하되, 개행 없이 한 줄로 작성하라.
 
-        2. 무조건 JSON 형태로 내게 답변해. (개행 금지)
+        [출력 예시]
+        [{"date":"2025-01-01","score":51},{"date":"2025-01-02","score":45}]
 
-        3. 최종 답변 전 답변이 아래 JSON 형태가 맞는지 한 번 더 검토해
-        
-        json{"date": "2025-01-01", "score": 51}
-        
+        뉴스 데이터:
         """
         try:
             # 첫번째 시도: AI가 실수를 할 수 있음
@@ -163,37 +163,26 @@ class GetNewsData():
             
             return final_dict
         except:
-            # 두번째 시도: 한 번 더 시도
-            print("Second Challenge")
-            prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
-            prompt_result = prompt_result.replace('json', '', 1)
-            print(prompt_result)
+            try:
+                # 두번째 시도: 한 번 더 시도
+                print("Second Challenge")
+                prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
+                prompt_result = prompt_result.replace('json', '', 1)
+                print(prompt_result)
 
-            final_dict = json.loads(prompt_result)
-            print("Translate Dictionary Success!")
-            time.sleep(30)
+                final_dict = json.loads(prompt_result)
+                print("Translate Dictionary Success!")
+                time.sleep(30)
+            except:
+                # 세번째 시도: 한 번 더 시도
+                print("Last Challenge")
+                prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
+                prompt_result = prompt_result.replace('json', '', 1)
+                print(prompt_result)
 
-        try:
-            # 세번째 시도: 한 번 더 시도
-            print("Second Challenge")
-            prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
-            prompt_result = prompt_result.replace('json', '', 1)
-            print(prompt_result)
-
-            final_dict = json.loads(prompt_result)
-            print("Translate Dictionary Success!")
-            time.sleep(30)
-        
-        except:
-            # 네번째 시도: 한 번 더 시도
-            print("Second Challenge")
-            prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
-            prompt_result = prompt_result.replace('json', '', 1)
-            print(prompt_result)
-
-            final_dict = json.loads(prompt_result)
-            print("Translate Dictionary Success!")
-            time.sleep(30)
+                final_dict = json.loads(prompt_result)
+                print("Translate Dictionary Success!")
+                time.sleep(30)
 
             return final_dict
 
@@ -203,7 +192,7 @@ class GetNewsData():
         collect = GetNewsData()
         
         current_path = Path.cwd()
-        dir_path = current_path.parent / 'cache'
+        dir_path = current_path / 'cache'
 
         display = 25
         start = start
@@ -213,11 +202,10 @@ class GetNewsData():
             while True:
                 if start == 501:
                     break
-                
-                print("START")
 
                 # Extract News URL
                 news_links = collect.get_news_data(query = query, display = display, start = start)
+                print(f"{query} start: {start}")
 
                 # Extract string in URL
                 extract_news_texts = collect.get_htmltext(news_links)
@@ -245,7 +233,7 @@ class GetNewsData():
 def combine_json_files(query):
     # JSON 캐시 파일 경로 정의
     current_path = Path.cwd()
-    dir_path = current_path.parent / 'cache'
+    dir_path = current_path / 'cache'
 
     # JSON 캐시 파일 서치
     pattern = f'sentimental_cache_{query}_*.json'
