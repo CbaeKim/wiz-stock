@@ -1,14 +1,28 @@
 import os, requests, json, re, time
+import pandas as pd
+import numpy as np
 import google.generativeai as genai
 from pathlib import Path
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from supabase import Client, create_client
+
 
 # Load Parent Path
 current_path = Path.cwd()
 env_path = current_path / '.env'
 
 load_dotenv(dotenv_path = env_path)
+
+# Set Supabase API KEY
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    print("Supabase 클라이언트 연결 완료.")
+except Exception as e:
+    print(f"Supabase 클라이언트 연결 실패: {e}")
 
 # Set Gemini API KEY
 genai.configure(api_key = os.getenv('GEMINI_API_KEY'))
@@ -155,9 +169,9 @@ class GetNewsData():
             print("First Challenge")
             prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
             prompt_result = prompt_result.replace('json', '', 1)
-            print(prompt_result)
 
             final_dict = json.loads(prompt_result)
+            print(type(final_dict))
             print("Translate Dictionary Success!")
             time.sleep(30)
             
@@ -168,41 +182,39 @@ class GetNewsData():
                 print("Second Challenge")
                 prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
                 prompt_result = prompt_result.replace('json', '', 1)
-                print(prompt_result)
 
                 final_dict = json.loads(prompt_result)
+                print(type(final_dict))
                 print("Translate Dictionary Success!")
                 time.sleep(30)
+            
+                return final_dict
             except:
                 # 세번째 시도: 한 번 더 시도
                 print("Last Challenge")
                 prompt_result = request_gem(prompt = prompt_text, text = '[next_news]'+part)
                 prompt_result = prompt_result.replace('json', '', 1)
-                print(prompt_result)
 
                 final_dict = json.loads(prompt_result)
+                print(type(final_dict))
                 print("Translate Dictionary Success!")
                 time.sleep(30)
+            
+                return final_dict
 
-            return final_dict
-
-    def run(self, query, start):
-        """ Sentimental Score Analysis 1000 News """
-
+    def run(self, query, get_page_value):
+        """ Sentimental Score Analysis 25 News """
+        
         collect = GetNewsData()
         
         current_path = Path.cwd()
         dir_path = current_path / 'cache'
 
         display = 25
-        start = start
         results = []
 
         try:
-            while True:
-                if start == 501:
-                    break
-
+            for start in range(1, (get_page_value * display) + 1, 25):
                 # Extract News URL
                 news_links = collect.get_news_data(query = query, display = display, start = start)
                 print(f"{query} start: {start}")
@@ -212,6 +224,7 @@ class GetNewsData():
 
                 # Execute Sentimental-Analysis
                 sentimental_results = collect.get_sentimental_score(extract_news_texts)
+                time.sleep(1)
 
                 # Cache
                 with open(dir_path / f'sentimental_cache_{query}_{start}.json', 'w', encoding='utf-8') as f:
@@ -221,16 +234,13 @@ class GetNewsData():
                     results.append(sentimental_results)
                 else:
                     results.extend(sentimental_results)
-                
-                start += display
+            
+            return results
         except:
             print("Error")
-
-        combine_json_files(query)
-            
-        return results
     
-def combine_json_files(query):
+def combine_json_files(query, get_page_value):
+    """ 생성된 JSON Cache 파일을 합쳐서 하나의 파일로 생성 """
     # JSON 캐시 파일 경로 정의
     current_path = Path.cwd()
     dir_path = current_path / 'cache'
@@ -243,7 +253,7 @@ def combine_json_files(query):
     json_file_names = [file for file in json_files]
 
     # 정상적으로 분석이 안 된 경우 체크
-    if len(json_file_names) < 20:
+    if len(json_file_names) < get_page_value:
         need_numbers = {val for val in range(1, 1000, 25)}
         exist_file_numbers = [json_file.name for json_file in json_file_names]
         extract_exist_numbers = {int(re.findall(r'\d+', exist_file)[0]) for exist_file in exist_file_numbers}
@@ -253,7 +263,7 @@ def combine_json_files(query):
 
         collect = GetNewsData()
 
-        run_result = collect.run(query = query, start = start_index)
+        run_result = collect.run(query = query, get_page_value = start_index)
 
         json_files = dir_path.glob(pattern)
         json_file_names = [file for file in json_files]
@@ -280,3 +290,48 @@ def combine_json_files(query):
             print("Sentimental Cache File Delete Error")
     
     return final_json_dict
+
+def json_files_load(top_10_stocks):
+    """ cache 디렉터리 내 json 파일들을 sentimental_score 테이블에 업로드 """
+    not_updated_files = []
+    current_path = Path.cwd()
+    dir_path = current_path / 'cache'
+
+    df = pd.DataFrame(top_10_stocks)
+    stock_names = [stock['name'] for stock in top_10_stocks]
+    stock_codes = [stock['code'][:-3] for stock in top_10_stocks]
+    start_index = 0
+
+    for file_name in stock_names:
+        # Find Json file
+        file_path = list(dir_path.glob(file_name+'_news.json'))
+
+        try:
+            # Open Json File >> DataFrame
+            with open(file_path[0], 'r', encoding = 'utf-8') as f:
+                json_df = pd.DataFrame(json.load(f))
+            
+                # Prerprocess DataFrame
+                proprecessed_df = json_df.groupby(by='date', as_index=False).mean()
+                proprecessed_df['score'] = proprecessed_df['score'].astype(int)
+                proprecessed_df.insert(loc = 1, column = 'stock_code', value = stock_codes[start_index])               
+                proprecessed_df['label'] = np.where(proprecessed_df['score'] >= 50, 1, 0)
+                df_to_dictionary = proprecessed_df.to_dict('records')
+
+                # Insert Table
+                response = supabase.table('sentimental_score').insert(df_to_dictionary).execute()
+
+                file_path[0].unlink()
+        except:
+            print(f"Failed: insert table -> '{file_path}'")
+            not_updated_files.append(file_path)
+            pass
+
+        start_index += 1
+    if len(not_updated_files) < 10:
+        print(f"Not updated Files: {len(not_updated_files)}")
+        print(f"Files: {not_updated_files}")
+    else:
+        print("Database Update Success")
+
+    return not_updated_files
