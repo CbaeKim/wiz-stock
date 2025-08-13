@@ -68,9 +68,6 @@ class GetNewsData():
         - display: 검색 결과 출력 건수 (기본값: 10, 최대: 100)
         - start: 검색 시작 위치 (기본값: 1, 최대: 1000)
         - sort: 정렬 옵션 ('sim': 정확도순, 'date': 날짜순)
-        
-        Returns:
-        - tuple: (뉴스 링크 리스트, 뉴스 제목 리스트)
         """
         
         # API 엔드포인트
