@@ -21,13 +21,13 @@ FASTAPI_ENDPOINT = 'http://localhost:8000'
 
 # 로그인 기능 구현
 @router.post("/validation", summary = "로그인을 구현하는 함수")
-async def login(item: Item, request: Request, db: Client = Depends(connect_supabase)):
+async def login(request: Request, item: Item, db: Client = Depends(connect_supabase)):
     # 계정 정보 초기화
     input_username = item.username
     input_password = item.password
     
     # DB -> 유저 정보 조회
-    user_info = db.from_('user_info').select('id', 'pw').execute().data
+    user_info = db.from_('user_info').select('id', 'password').execute().data
     
     try:
         df = pd.DataFrame(user_info)
@@ -37,7 +37,7 @@ async def login(item: Item, request: Request, db: Client = Depends(connect_supab
 
         # ID / PW 추출
         db_id = user_search['id'].iloc[0]
-        db_pw = user_search['pw'].iloc[0]
+        db_pw = user_search['password'].iloc[0]
 
         # ID/PW 입력값 검증 (return True or False)
         validation_result = bcrypt.checkpw(input_password.encode('utf-8'), str(db_pw).encode('utf-8'))
@@ -67,7 +67,7 @@ async def get_name(item: Item, db: Client = Depends(connect_supabase)):
     input_password = item.password
 
     # DB -> 유저 정보 조회
-    user_info = db.from_('user_info').select('id', 'name').execute().data
+    user_info = db.from_('user_info').select('id', 'nickname').execute().data
 
     try:
         df = pd.DataFrame(user_info)
@@ -75,24 +75,22 @@ async def get_name(item: Item, db: Client = Depends(connect_supabase)):
         # ID에 해당하는 정보 추출
         user_search = df[(df['id'] == input_username)]
 
-        user_name = user_search['name'].iloc[0]
+        user_name = user_search['nickname'].iloc[0]
 
         return {'user_name': user_name}
 
     except:
         return {'message': "NotFound"}
 
-@router.get("/get_host_ip", summary = '클라이언트 IP 주소 반환')
+@router.post("/get_host_ip", summary = "Client IP 주소 반환")
 async def get_hostip(request: Request):
-    """ 클라이언트의 IP 주소를 반환합니다. """
-    # 프록시 서버일 경우 데이터 반환
+    """ Return Client IP address """
     x_forwarded_for = request.headers.get('X-Forwarded-For')
 
-    # 프록시 서버일 경우 실행
+    # if have a proxy server
     if x_forwarded_for:
         client_ip = x_forwarded_for.split(',')[0].strip()
 
-    # 프록시 서버가 없을 경우 실행
     else:
         client_ip = request.client.host
 
