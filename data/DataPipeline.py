@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from GetData import get_all_stock_data, get_technical_data, extract_unique_rows
 from GetNews import GetNewsData, combine_json_files, json_files_load
-from SupabaseHandle import insert_rows
+from SupabaseHandle import insert_rows, request_table
 from supabase import Client, create_client
 from dotenv import load_dotenv
 
@@ -41,28 +41,39 @@ if __name__=="__main__":
     # create 'stock_data_cache.csv' : All Stock Data Mining result
     new_data = get_all_stock_data(top_10_stocks)
 
-    # '~cache.csv' file read > get technical metrics > save 'stock_data.csv'
+    # '~cache.csv' file read >> add technical metrics >> save 'stock_data.csv'
     get_technical_data()
 
+    # Get All data in 'technical_data'
     try:
-        # 1. Compare new_data and stock_data.csv
-        # 2. Insert compare result rows
-        # 3. save 'stock_data.csv'
-        new_rows = extract_unique_rows()
-        insert_rows([new_rows[0]])
-        print("Data update success")
-
+        supabase_table = request_table('technical_data')
+        supabase_table_length = 1
     except:
-        # Extract the sample DB and check its existence.
-        select_table = supabase.from_('technical_data').select('*').execute()
+        supabase_table_length = 0
 
-        if len(select_table.data) == 0:
-            # Insert New data
-            insert_rows([new_data])
+    # no data in 'technical_data'
+    if supabase_table_length == 0:
+        print("There is no data in 'technical_data', start insert all data")
+        all_data = pd.read_csv('./cache/stock_data.csv')
+        insert_rows(all_data)
+        print("All data insert success.")
+    
+    try:
+        # Extract new data
+        new_rows = extract_unique_rows()
+
+        # If the new data is in 'new_rows'
+        if len(new_rows) != 0:
+            print("Find a new data, start insert new data")
+            insert_rows(new_rows)
             print("New data insert success.")
-        
+
+        # If the data is latest
         else:
-            print("DB is latest")
+            print("Data is latest")
+
+    except Exception as e:
+        print(f"Error: {e}")
 
     """ Sentimental-Analyze Start """
     # Get News Data

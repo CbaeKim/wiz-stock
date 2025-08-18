@@ -20,7 +20,7 @@ def validation(response):
     else:
         print("코드를 재확인해주세요.")
 
-def request_table(table_name):
+def request_table(table_name) -> pd.DataFrame:
     """ Get All Rows in supabase """
     all_data = []
     page_size = 1000
@@ -56,12 +56,11 @@ def request_table(table_name):
 
     return df
 
-def insert_rows(df_list):
+def insert_rows(df):
     """ 데이터프레임을 supabase technical_data 테이블에 업로드 """
-    for df in df_list:
-        df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
-        df_to_dictionary = df.to_dict('records')
-        response = supabase.table('technical_data').insert(df_to_dictionary).execute()
-        print("Success Insert Rows.")
+    df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
+    df_to_dictionary = df.to_dict('records')
+    response = supabase.table('technical_data').insert(df_to_dictionary).execute()
+    print("Success Insert Rows.")
 
     return response

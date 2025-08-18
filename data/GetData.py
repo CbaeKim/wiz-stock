@@ -30,7 +30,7 @@ def get_data(ticker_symbol, period="max", date = None):
 def get_all_stock_data(stock_dict, start_date = None):
     """ Get all Stock Dictionary data """
     current_path = Path.cwd()
-    file_path = current_path.parent / '*stock_data_cache.csv'
+    file_path = current_path / './cache/stock_data_cache.csv'
 
     stock_codes = [stock['code'][:-3] for stock in stock_dict]
 
@@ -55,7 +55,7 @@ def get_all_stock_data(stock_dict, start_date = None):
     
     return final_df
 
-def preprocess_csv(file_path):
+def preprocess_csv(file_path) -> pd.DataFrame:
     """ Load CSV >> 'stock_code' padding to zero """
     local_table = pd.read_csv(file_path)
     local_table['stock_code'] = local_table['stock_code'].astype(str).str.zfill(6)
@@ -66,7 +66,8 @@ def extract_unique_rows():
     # Filter Stock code rows
     get_table = request_table('technical_data')
     current_path = Path.cwd()
-    file_path = current_path.parent / '*stock_data_cache.csv'
+    file_path = current_path / 'cache/stock_data.csv'
+    print(file_path, Path.cwd())
     local_table = preprocess_csv(file_path)
 
     # Extract Common Columns
@@ -79,14 +80,11 @@ def extract_unique_rows():
     get_table = get_table[table_columns]
 
     # Extract Unique rows
-    new_data_rows = (
-        pd.concat([get_table[columns], local_table[columns]]).reset_index(drop = True)
-        .drop_duplicates(subset = ['Date', 'stock_code'], keep = False)
-        )
+    new_data_rows = pd.concat([get_table[columns], local_table[columns]]).reset_index(drop = True).drop_duplicates(subset = ['Date', 'stock_code'], keep = False)
+    new_data_rows['OBV'] = new_data_rows['OBV'].astype(int)
 
-    return new_data_rows, get_table, local_table
+    return new_data_rows
 
-# 이동평균선 구하는 함수 정의
 def get_ma(df, close_col, ma_value, ma):
     """
     df : 데이터프레임
@@ -112,7 +110,6 @@ def get_ma(df, close_col, ma_value, ma):
         except Exception as e:
             print(f"EMA 계산 오류: {e}")
 
-# MACD를 계산하는 함수 정의
 def get_macd(df, close_col, ma_value = [12, 26]):
     # ma_value = 리스트 형태로 전달 -> 기본값은 12일, 26일
     # 2개의 EMA 산출
@@ -121,7 +118,6 @@ def get_macd(df, close_col, ma_value = [12, 26]):
 
     return (ema_1 - ema_2)
 
-# 볼린저 밴드 산출 함수
 def get_bollinger_bands(df, close_col, ma_value = 20, visualization = False):
     """ 
     중간 밴드 : X 기간 동안의 SMA ( = ma_value )
@@ -161,7 +157,6 @@ def get_bollinger_bands(df, close_col, ma_value = 20, visualization = False):
     else:
         return middle_band, upper_band, lower_band
 
-### RSI 계산 함수
 def get_rsi(df, day=14):
 
     # 전날 종가 차이 계산
@@ -299,7 +294,7 @@ def get_obv(df, close_col, volume_col):
 def get_technical_data():
     """ 주가 데이터 Load & 기술적 분석 지표를 계산 후 DataFrame으로 반환 """
     current_path = Path.cwd()
-    file_path = current_path.parent / '*stock_data_cache.csv'
+    file_path = current_path / 'cache/stock_data_cache.csv'
     df = pd.read_csv(file_path)
     df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
 
@@ -377,6 +372,6 @@ def get_technical_data():
        'Bollinger_Lower', 'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 
     df[change_columns] = df[change_columns].round(2)
-    df.to_csv(file_path, index = False)
+    df.to_csv(current_path / 'cache/stock_data.csv', index = False)
     
     return df
