@@ -67,7 +67,6 @@ def extract_unique_rows():
     get_table = request_table('technical_data')
     current_path = Path.cwd()
     file_path = current_path / 'cache/stock_data.csv'
-    print(file_path, Path.cwd())
     local_table = preprocess_csv(file_path)
 
     # Extract Common Columns
@@ -82,6 +81,7 @@ def extract_unique_rows():
     # Extract Unique rows
     new_data_rows = pd.concat([get_table[columns], local_table[columns]]).reset_index(drop = True).drop_duplicates(subset = ['Date', 'stock_code'], keep = False)
     new_data_rows['OBV'] = new_data_rows['OBV'].astype(int)
+    new_data_rows['stock_code'] = new_data_rows['stock_code'].astype(str).str.zfill(6)
 
     return new_data_rows
 

@@ -10,15 +10,9 @@ SUPABASE_KEY = 'sb_secret_5rUltxbkuiB3wFcTyMs1qw_cJHFo3kf'
 # 클라이언트 연결
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("Supabase 클라이언트 연결 완료.")
+    print("[Supabase] Client connect success")
 except Exception as e:
-    print(f"Supabase 클라이언트 연결 실패: {e}")
-
-def validation(response):
-    if response.data:
-        print("데이터베이스 적용 완료")
-    else:
-        print("코드를 재확인해주세요.")
+    print(f"[Supabase] Client connect failed: {e}")
 
 def request_table(table_name) -> pd.DataFrame:
     """ Get All Rows in supabase """
@@ -38,13 +32,13 @@ def request_table(table_name) -> pd.DataFrame:
         data = response.data
 
         if not data:
-            print("No Data")
+            print("[Alert] No Data in table")
 
         all_data.extend(data)
 
         # 가져온 데이터가 페이지 크기보다 작으면 마지막 페이지이므로 종료
         if len(data) < page_size:
-            print("모든 데이터를 성공적으로 가져왔습니다.")
+            print("[Alert] All data get Success")
             break
 
         page += 1
@@ -61,6 +55,6 @@ def insert_rows(df):
     df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
     df_to_dictionary = df.to_dict('records')
     response = supabase.table('technical_data').insert(df_to_dictionary).execute()
-    print("Success Insert Rows.")
+    print("[Alert] Success Insert Rows.")
 
     return response

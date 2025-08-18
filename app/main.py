@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 
     scheduler.add_job(
         get_news_datas,
-        CronTrigger(hour = 18, minute = 26)  # PM 6:00
+        CronTrigger(hour = 2, minute = 7)  # PM 6:00
     )
 
     scheduler.start()
