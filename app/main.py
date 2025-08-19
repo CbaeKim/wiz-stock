@@ -21,7 +21,10 @@ def reset_day_process():
     """ Function to reset participation values """
     print("[Function: reset_day_process] Start")
 
-    update_data = {'quiz_participation': False, 'predict_game_participation': False}
+    update_data = {
+        'quiz_participation': False,
+        'predict_game_participation': False
+    }
     
     supabase = connect_supabase()
     
