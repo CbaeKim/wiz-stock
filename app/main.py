@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from contextlib import asynccontextmanager
+from app.dependency.connect_supabase import connect_supabase
 import asyncio, subprocess
 
 # add router files
@@ -10,29 +11,30 @@ from app.routers import login, quiz, mypage_router, sign_up
 
 def get_news_datas():
     """ A function to run when the server starts """
-    print("Start News data mining & Sentimental analysis")
+    print("[Function: get_news_datas] Start News data mining & Sentimental analysis")
 
     subprocess.run(['python', './data/DataPipeline.py'])
 
     print("Process Complete.")
 
+def reset_day_process():
+    """ Function to reset participation values """
+    print("[Function: reset_day_process] Start")
+
+    update_data = {'quiz_participation': False, 'predict_game_participation': False}
+    
+    supabase = connect_supabase()
+    
+    response = supabase.table('user_info').update(update_data).not_.is_('id', None).execute()
+    return print("[Function: reset_day_process] Success")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """ A function to run when the server starts """
-    scheduler.add_job(
-        get_news_datas,
-        CronTrigger(hour = 9, minute = 41)  # AM 10:00
-    )
-
-    scheduler.add_job(
-        get_news_datas,
-        CronTrigger(hour = 15, minute = 30)  # PM 3:30
-    )
-
-    scheduler.add_job(
-        get_news_datas,
-        CronTrigger(hour = 18, minute = 00)  # PM 6:00
-    )
+    scheduler.add_job(get_news_datas, CronTrigger(hour = 10, minute = 00))      # AM 10:00
+    scheduler.add_job(get_news_datas, CronTrigger(hour = 15, minute = 30))      # PM 3:30
+    scheduler.add_job(get_news_datas, CronTrigger(hour = 18, minute = 00))      # PM 6:00
+    scheduler.add_job(reset_day_process, CronTrigger(hour = 0, minute = 00))    # AM 12:00
 
     scheduler.start()
 
