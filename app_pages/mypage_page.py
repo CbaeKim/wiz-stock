@@ -53,7 +53,7 @@ def mypage_content():
                 # "message" 키가 없으면 정상 데이터로 간주합니다.
                 if "message" not in data:
                     # dict.get("키"): 키가 없으면 None을 돌려줍니다(안전)
-                    st.session_state.nickname = data.get("name")
+                    st.session_state.nickname = data.get("nickname")
                     st.session_state.nickname_color = data.get("nickname_color")
 
                     st.session_state.contact = data.get("contact")

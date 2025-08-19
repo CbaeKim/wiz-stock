@@ -22,7 +22,7 @@ async def get_mypage_data(
     try:
         # Get table 'user_info'
         response = db.from_("user_info").select(
-            "id, name, nickname_color, total_point, daily_point_bonus, "
+            "id, nickname, nickname_color, total_point, daily_point_bonus, "
             "my_trophies, purchased_indicators, "
             "contact, email, attendance, continuous_attendance, last_attendance_date"
         ).eq("id", user_id).execute()
