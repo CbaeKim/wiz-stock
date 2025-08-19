@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import date, timedelta, datetime
 
 # 페이지 함수 임폴트
-from app_pages.auth_page import login_page, signup_page
+from app_pages.auth_page_old_version import login_page, signup_page
 from app_pages.main_page import main_content
 from app_pages.pred_stock_page import predict_stock_page
 from app_pages.community_page import community_page

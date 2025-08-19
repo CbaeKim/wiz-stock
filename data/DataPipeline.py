@@ -31,21 +31,21 @@ if __name__=="__main__":
     current_hour = now.hour
     current_minute = now.minute
 
+    # market capitalization Top 10
+    print("[Function: StockListing] KRX Data Mining Start")
+    krx_df = fdr.StockListing('KRX').sort_values(by = 'Marcap', ascending = False)
+    print("[Function: StockListing] KRX Data Mining Success")
+
+    # KRX Data Preprocess
+    top_10 = krx_df[:10][['Code', 'Name']]
+    top_10.rename(columns = {'Code': 'code', 'Name': 'name'}, inplace = True)
+    top_10 = top_10[['name', 'code']]
+    top_10['code'] = top_10['code'] + '.KS'
+    top_10_stocks = top_10.to_dict('records')
+    print("[Preprocess] KRX Top 10 Data Preprocess Success")
+
     # Execute only PM 3:30
     if current_hour == 15 and current_minute == 30:
-        # market capitalization Top 10
-        print("[Function: StockListing] KRX Data Mining Start")
-        krx_df = fdr.StockListing('KRX').sort_values(by = 'Marcap', ascending = False)
-        print("[Function: StockListing] KRX Data Mining Success")
-
-        # KRX Data Preprocess
-        top_10 = krx_df[:10][['Code', 'Name']]
-        top_10.rename(columns = {'Code': 'code', 'Name': 'name'}, inplace = True)
-        top_10 = top_10[['name', 'code']]
-        top_10['code'] = top_10['code'] + '.KS'
-        top_10_stocks = top_10.to_dict('records')
-        print("[Preprocess] KRX Top 10 Data Preprocess Success")
-        
         # create 'stock_data_cache.csv' : All Stock Data Mining result
         print("[Function: get_all_stock_data] Start")
         new_data = get_all_stock_data(top_10_stocks)

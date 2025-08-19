@@ -21,17 +21,17 @@ async def lifespan(app: FastAPI):
     """ A function to run when the server starts """
     scheduler.add_job(
         get_news_datas,
-        CronTrigger(hour = 10, minute = 0)  # AM 10:00
+        CronTrigger(hour = 9, minute = 41)  # AM 10:00
     )
 
     scheduler.add_job(
         get_news_datas,
-        CronTrigger(hour = 14, minute = 3)  # PM 2:00
+        CronTrigger(hour = 15, minute = 30)  # PM 3:30
     )
 
     scheduler.add_job(
         get_news_datas,
-        CronTrigger(hour = 2, minute = 7)  # PM 6:00
+        CronTrigger(hour = 18, minute = 00)  # PM 6:00
     )
 
     scheduler.start()
