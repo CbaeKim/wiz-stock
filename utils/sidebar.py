@@ -13,7 +13,7 @@ def sidebar_menu():
         "포인트 상점",
         # "애널리스트 페이지",
         "마이페이지",
-        "로그아웃"
+        # "로그아웃"
     ]
 
     with st.sidebar:
@@ -26,7 +26,18 @@ def sidebar_menu():
                 st.rerun()
 
         st.title("📌 메뉴")
-        choice = st.radio("이동하기", menu_options, key="radio_menu_choice")
+        
+        try:
+            current_page_index = menu_options.index(st.session_state.page)
+        except ValueError:
+            current_page_index = 0 
+
+        choice = st.radio(
+            "이동하기", 
+            menu_options, 
+            key="radio_menu_choice",
+            index=current_page_index
+        )
         
         if choice != st.session_state.page:
             st.session_state.page = choice
@@ -41,6 +52,15 @@ def sidebar_menu():
         # 주간 랭킹
         display_ranking_sidebar()
         award_weekly_points()
+
+        st.markdown("---")
+        
+        # 로그아웃 버튼
+        if st.button("로그아웃", use_container_width=True):
+            st.session_state.authenticated = False
+            st.session_state.page = "로그인"
+            st.toast("로그아웃 되었습니다.", icon="👋")
+            st.rerun()
 
 # 오늘의 퀘스트 UI를 렌더링
 def render_daily_quest():
@@ -60,7 +80,7 @@ def render_daily_quest():
     today_point = log.get("point", 0)
     goal_point = 10
 
-    with st.expander("🎯 오늘의 퀘스트"):
+    with st.expander("🎯 오늘의 퀘스트", expanded=True):
         st.markdown(f"오늘의 목표: **{goal_point}점**")
         st.markdown(f"현재 획득 포인트: **{today_point}점**")
         progress = min(today_point / goal_point, 1.0)

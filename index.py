@@ -19,15 +19,12 @@ from app_pages.mypage_page import mypage_content
 from utils.session import initialize_session_state
 from utils.sidebar import sidebar_menu
 
-# ---------------------------
 # 기본 설정
 st.set_page_config(page_title="위즈주식", layout="wide", page_icon="📈")
 
-# ---------------------------
 # 세션 상태 초기화 함수 호출
 initialize_session_state()
 
-# ---------------------------
 # 공통 스타일
 st.markdown("""
     <style>
@@ -45,7 +42,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------
 # 페이지 라우팅
 if st.session_state.authenticated:
     sidebar_menu()
@@ -66,11 +62,6 @@ if st.session_state.authenticated:
         analyst_page()
     elif st.session_state.page == "마이페이지":
         mypage_content()
-    elif st.session_state.page == "로그아웃":
-        st.session_state.authenticated = False
-        st.session_state.page = "로그인"
-        st.success("로그아웃 되었습니다.")
-        st.rerun()
 else:
     # 인증되지 않은 경우 로그인 또는 회원가입 페이지 표시
     if st.session_state.page == "로그인":
