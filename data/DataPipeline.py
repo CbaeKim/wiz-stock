@@ -2,6 +2,7 @@ import pandas as pd
 import FinanceDataReader as fdr
 import os
 from pathlib import Path
+from datetime import datetime
 from GetData import get_all_stock_data, get_technical_data, extract_unique_rows
 from GetNews import GetNewsData, combine_json_files, json_files_load
 from SupabaseHandle import insert_rows, request_table
@@ -26,64 +27,70 @@ except Exception as e:
 
 if __name__=="__main__":
     """ Technical Data Upload start """
-    # market capitalization Top 10
-    print("[Function: StockListing] KRX Data Mining Start")
-    krx_df = fdr.StockListing('KRX').sort_values(by = 'Marcap', ascending = False)
-    print("[Function: StockListing] KRX Data Mining Success")
+    now = datetime.now()
+    current_hour = now.hour
+    current_minute = now.minute
 
-    # KRX Data Preprocess
-    top_10 = krx_df[:10][['Code', 'Name']]
-    top_10.rename(columns = {'Code': 'code', 'Name': 'name'}, inplace = True)
-    top_10 = top_10[['name', 'code']]
-    top_10['code'] = top_10['code'] + '.KS'
-    top_10_stocks = top_10.to_dict('records')
-    print("[Preprocess] KRX Top 10 Data Preprocess Success")
-    
-    # create 'stock_data_cache.csv' : All Stock Data Mining result
-    print("[Function: get_all_stock_data] Start")
-    new_data = get_all_stock_data(top_10_stocks)
-    print("[Function: get_all_stock_data] Success")
+    # Execute only PM 3:30
+    if current_hour == 15 and current_minute == 30:
+        # market capitalization Top 10
+        print("[Function: StockListing] KRX Data Mining Start")
+        krx_df = fdr.StockListing('KRX').sort_values(by = 'Marcap', ascending = False)
+        print("[Function: StockListing] KRX Data Mining Success")
 
-    # '~cache.csv' file read >> add technical metrics >> save 'stock_data.csv'
-    print("[Function: get_technical_data] Start")
-    get_technical_data()
-    print("[Function: get_technical_data] Success")
+        # KRX Data Preprocess
+        top_10 = krx_df[:10][['Code', 'Name']]
+        top_10.rename(columns = {'Code': 'code', 'Name': 'name'}, inplace = True)
+        top_10 = top_10[['name', 'code']]
+        top_10['code'] = top_10['code'] + '.KS'
+        top_10_stocks = top_10.to_dict('records')
+        print("[Preprocess] KRX Top 10 Data Preprocess Success")
+        
+        # create 'stock_data_cache.csv' : All Stock Data Mining result
+        print("[Function: get_all_stock_data] Start")
+        new_data = get_all_stock_data(top_10_stocks)
+        print("[Function: get_all_stock_data] Success")
 
-    # Get All data in 'technical_data'
-    try:
-        print("[Function: request_table] start search DB tables")
-        supabase_table = request_table('technical_data')
-        supabase_table_length = 1
-        print("[Function: request_table] search DB tables success")
-    except:
-        print("[Function: request_table] DB table is empty space")
-        supabase_table_length = 0
+        # '~cache.csv' file read >> add technical metrics >> save 'stock_data.csv'
+        print("[Function: get_technical_data] Start")
+        get_technical_data()
+        print("[Function: get_technical_data] Success")
 
-    # no data in 'technical_data'
-    if supabase_table_length == 0:
-        print("[Function: insert_rows] start insert all data")
-        all_data = pd.read_csv('./cache/stock_data.csv')
-        all_data['stock_code'] = all_data['stock_code'].astype(str).str.zfill(6)
-        insert_rows(all_data)
-        print("[Function: insert_rows] All data insert success.")
-    
-    try:
-        # Extract new data
-        print("[Function: extract_unique_rows] Start extract new data")
-        new_rows = extract_unique_rows()
+        # Get All data in 'technical_data'
+        try:
+            print("[Function: request_table] start search DB tables")
+            supabase_table = request_table('technical_data')
+            supabase_table_length = 1
+            print("[Function: request_table] search DB tables success")
+        except:
+            print("[Function: request_table] DB table is empty space")
+            supabase_table_length = 0
 
-        # If the new data is in 'new_rows'
-        if len(new_rows) != 0:
-            print("[Function: insert_rows] Find a new data, start insert new data")
-            insert_rows(new_rows)
-            print("[Function: insert_rows] New data insert success.")
+        # no data in 'technical_data'
+        if supabase_table_length == 0:
+            print("[Function: insert_rows] start insert all data")
+            all_data = pd.read_csv('./cache/stock_data.csv')
+            all_data['stock_code'] = all_data['stock_code'].astype(str).str.zfill(6)
+            insert_rows(all_data)
+            print("[Function: insert_rows] All data insert success.")
+        
+        try:
+            # Extract new data
+            print("[Function: extract_unique_rows] Start extract new data")
+            new_rows = extract_unique_rows()
 
-        # If the data is latest
-        else:
-            print("[Alert] Data is latest")
+            # If the new data is in 'new_rows'
+            if len(new_rows) != 0:
+                print("[Function: insert_rows] Find a new data, start insert new data")
+                insert_rows(new_rows)
+                print("[Function: insert_rows] New data insert success.")
 
-    except Exception as e:
-        print(f"Error: {e}")
+            # If the data is latest
+            else:
+                print("[Alert] Data is latest")
+
+        except Exception as e:
+            print(f"Error: {e}")
 
     """ Sentimental-Analyze Start """
     # Get News Data
