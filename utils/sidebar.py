@@ -5,8 +5,15 @@ from .ranking import display_ranking_sidebar, award_weekly_points
 
 def sidebar_menu():
     menu_options = [
-        "메인", "주가 예측 게임", "커뮤니티", "수집 콘텐츠",
-        "보조지표 제공", "포인트 상점", "애널리스트 페이지", "마이페이지", "로그아웃"
+        "메인",
+        "주가 예측 게임",
+        # "커뮤니티",
+        # "수집 콘텐츠",
+        # "보조지표 제공",
+        # "포인트 상점",
+        # "애널리스트 페이지",
+        "마이페이지",
+        "로그아웃"
     ]
 
     with st.sidebar:
