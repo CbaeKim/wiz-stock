@@ -7,7 +7,7 @@ from app.dependency.connect_supabase import connect_supabase
 import asyncio, subprocess
 
 # add router files
-from app.routers import login, quiz, mypage_router, sign_up
+from app.routers import login, quiz, mypage_router, sign_up, point
 
 def get_news_datas():
     """ A function to run when the server starts """
@@ -50,6 +50,7 @@ app.include_router(login.router)            # 로그인 관련 기능
 app.include_router(quiz.router)             # quiz 관련 기능
 app.include_router(mypage_router.router)    # mypage 관련 기능'
 app.include_router(sign_up.router)
+app.include_router(point.router)
 
 @app.get("/")
 def read_root():

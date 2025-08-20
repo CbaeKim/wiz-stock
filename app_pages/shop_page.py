@@ -1,287 +1,172 @@
-### 서브 콘텐츠 5: 포인트 상점
-
 import streamlit as st
-from datetime import date, datetime, timedelta
-import random
 import time
+import random
+import requests
 
-# ---------------------------
-# 숫자 맞추기 게임
-def number_guessing_game():
-    st.subheader("숫자 맞추기 게임")
-    st.write("1부터 100 사이의 숫자를 5번 안에 맞춰보세요! 정답 시 10 포인트 획득!")
+# --- 상수 정의 ---
+BACKEND_URL = "http://127.0.0.1:8000"
 
-    # 게임 상태 변수 초기화
-    if "game_state" not in st.session_state:
-        st.session_state.game_state = "initial"
-    if "secret_number" not in st.session_state:
-        st.session_state.secret_number = 0
-    if "guesses" not in st.session_state:
-        st.session_state.guesses = 0
-    if "game_message" not in st.session_state:
-        st.session_state.game_message = ""
-    if "game_cooldown_start_time" not in st.session_state:
-        st.session_state.game_cooldown_start_time = None
-    if "last_guess_value" not in st.session_state:
-        st.session_state.last_guess_value = 50
-    if "game_over_reason" not in st.session_state:
-        st.session_state.game_over_reason = ""
+# --- API 호출 함수 섹션 ---
+def get_user_status_api(user_id: str):
+    """백엔드에 사용자의 현재 상태 정보(포인트, 참여 횟수 등)를 요청합니다."""
+    try:
+        response = requests.get(f"{BACKEND_URL}/point/{user_id}/status")
+        # 요청이 성공하면(200 OK), JSON 데이터를 반환
+        return response.json() if response.ok else None
+    except requests.exceptions.RequestException:
+        # 서버 연결 실패 등 네트워크 오류 발생 시 None을 반환
+        return None
+
+def attendance_check_api(user_id: str):
+    """백엔드에 출석 체크를 요청하고 결과를 반환합니다."""
+    response = requests.post(f"{BACKEND_URL}/point/attendance", json={"user_id": user_id})
+    return response.json() if response.ok else {"error": response.json().get("detail", "오류 발생")}
+
+def ad_points_api(user_id: str):
+    """백엔드에 광고 시청에 따른 포인트 지급을 요청합니다."""
+    response = requests.post(f"{BACKEND_URL}/point/gain/ad", json={"user_id": user_id})
+    return response.json() if response.ok else {"error": response.json().get("detail", "오류 발생")}
+
+def game_result_api(user_id: str, won: bool):
+    """백엔드에 게임 결과를 전송하고 결과를 반환합니다."""
+    response = requests.post(f"{BACKEND_URL}/point/game-result", json={"user_id": user_id, "won": won})
+    return response.json() if response.ok else {"error": response.json().get("detail", "오류 발생")}
 
 
-    # 게임 재시작 또는 쿨다운 상태 처리
-    if st.session_state.game_state == "initial":
-        st.session_state.secret_number = random.randint(1, 100)
-        st.session_state.guesses = 0
-        st.session_state.game_message = "새로운 게임이 시작되었습니다. 숫자를 맞춰보세요!"
-        st.session_state.game_state = "playing"
-        st.session_state.game_cooldown_start_time = None
-        st.session_state.game_over_reason = ""
-        if st.session_state.game_state != "initial":
-            st.rerun()
-
-    elif st.session_state.game_state == "cooldown":
-        current_time = datetime.now()
-        if st.session_state.game_cooldown_start_time is None:
-            st.session_state.game_state = "initial"
-            st.rerun()
-            return
-        
-        elapsed_time = (current_time - st.session_state.game_cooldown_start_time).total_seconds()
-        remaining_game_cooldown_time = 60 - elapsed_time
-
-        # 게임 결과 메시지 표시
-        if st.session_state.game_over_reason == "lost":
-            st.warning(f"아쉽네요! 5번의 기회를 모두 소진했습니다. 정답은 {st.session_state.secret_number}였습니다.")
-        elif st.session_state.game_over_reason == "won":
-            st.success(f"정답입니다! 🎉 {st.session_state.guesses}번 만에 맞췄어요! +10점")
-
-        # 쿨다운 상태 표시
-        if remaining_game_cooldown_time > 0:
-            st.info(f"게임 재도전까지 **{int(remaining_game_cooldown_time)}초** 남았습니다. 다른 활동을 이용해보세요.")
-            st.number_input("숫자를 입력하세요 (1-100)", min_value=1, max_value=100, value=50, key="number_guess_disabled", disabled=True)
-            st.button("제출", key="submit_guess_disabled", disabled=True)
-        else:
-            # 쿨다운이 끝나면 게임 초기화
-            st.session_state.game_state = "initial"
-            st.session_state.game_cooldown_start_time = None
-            st.session_state.game_message = "새로운 게임이 시작되었습니다. 숫자를 맞춰보세요!"
-            st.rerun()
-
-    elif st.session_state.game_state == "playing":
-        st.info(st.session_state.game_message)
-        st.write(f"시도 횟수: {st.session_state.guesses}/5")
-
-        guess = st.number_input("숫자를 입력하세요 (1-100)", min_value=1, max_value=100, value=st.session_state.last_guess_value, key="number_guess")
-        st.session_state.last_guess_value = guess
-
-        if st.button("제출", key="submit_guess"):
-            st.session_state.guesses += 1
-            if guess < st.session_state.secret_number:
-                st.session_state.game_message = "더 높은 숫자입니다!"
-            elif guess > st.session_state.secret_number:
-                st.session_state.game_message = "더 낮은 숫자입니다!"
-            else:
-                # 정답을 맞춘 경우
-                st.session_state.game_message = f"정답입니다! 🎉 {st.session_state.guesses}번 만에 맞췄어요! +10점"
-                if "points" not in st.session_state:
-                    st.session_state.points = 0
-                st.session_state.points += 10
-                today_iso = date.today().isoformat()
-                if today_iso in st.session_state.study_log:
-                    st.session_state.study_log[today_iso]["point"] = st.session_state.study_log[today_iso].get("point", 0) + 10
-                st.balloons()
-                st.session_state.game_state = "cooldown"
-                st.session_state.game_over_reason = "won"
-                st.session_state.game_cooldown_start_time = datetime.now()
-            
-            # 5번의 기회를 모두 소진한 경우 (오답)
-            if st.session_state.game_state == "playing" and st.session_state.guesses >= 5:
-                st.session_state.game_message = f"아쉽네요! 5번의 기회를 모두 소진했습니다. 정답은 {st.session_state.secret_number}였습니다. 60초 후에 다시 도전해주세요."
-                st.session_state.game_state = "cooldown"
-                st.session_state.game_over_reason = "lost"
-                st.session_state.game_cooldown_start_time = datetime.now()
-            
-            st.rerun()
-
-# ---------------------------
-# 광고 보고 포인트 적립
-def ad_watching_reward():
-    st.subheader("30초 광고 보고 포인트 적립")
-    st.write("30초 광고를 시청하고 5포인트를 획득하세요.")
-
-    COOLDOWN_SECONDS = 60
-    can_watch_ad = True
-    remaining_time = 0
-    if st.session_state.get("last_ad_watch_time"):
-        current_time = datetime.now()
-        elapsed_time = (current_time - st.session_state.last_ad_watch_time).total_seconds()
-        if elapsed_time < COOLDOWN_SECONDS:
-            can_watch_ad = False
-            remaining_time = COOLDOWN_SECONDS - elapsed_time
-
-    if st.button("📺 광고 시청하기 (5점)", key="watch_ad_button", disabled=not can_watch_ad):
-        if can_watch_ad:
-            st.session_state.ad_cooldown_active = True
-            st.rerun()
-    
-    if not can_watch_ad:
-        st.markdown(f"다음 광고 시청까지 **{int(remaining_time)}초** 남았습니다.")
-    else:
-        st.markdown("새로운 광고를 시청할 수 있습니다!")
-
-def ad_active_state():
-    st.title("광고를 시청 중입니다.")
-    st.info("광고가 끝날 때까지 잠시만 기다려주세요.")
-    progress_bar = st.progress(0)
-    
-    # 30초 동안 진행되는 광고 시뮬레이션
-    for i in range(30):
-        time.sleep(1)
-        progress_bar.progress((i + 1) / 30)
-    
-    st.session_state.points += 5
-    today = date.today().isoformat()
-    if today in st.session_state.study_log:
-        st.session_state.study_log[today]["point"] = st.session_state.study_log[today].get("point", 0) + 5
-    
-    st.session_state.last_ad_watch_time = datetime.now()
-    st.success("광고 시청 완료! 5포인트를 획득했습니다! 🎉")
-    st.balloons()
-    st.session_state.ad_cooldown_active = False
-    st.rerun()
-
-# ---------------------------
-# 출석 체크
-def attendance_check():
+# --- UI 렌더링 함수 섹션 ---
+def render_attendance_tab(user_id: str):
+    """'출석 체크' 탭의 UI를 렌더링합니다."""
     st.subheader("🗓️ 출석 체크")
-    st.write("매일 출석하고 포인트를 적립하세요! 7일 연속 출석 시 보너스 10포인트!")
-
-    # 출석 관련 세션 상태 초기화
-    if "last_attendance_date" not in st.session_state:
-        st.session_state.last_attendance_date = None
-    if "consecutive_days" not in st.session_state:
-        st.session_state.consecutive_days = 0
-    if "attendance_points_today_given" not in st.session_state:
-        st.session_state.attendance_points_today_given = False
-
-    today = date.today()
-    can_check_in = True
-    message = ""
-
-    if st.session_state.last_attendance_date:
-        last_date_obj = datetime.fromisoformat(st.session_state.last_attendance_date).date()
-        if last_date_obj == today:
-            can_check_in = False
-            message = "오늘은 이미 출석체크를 완료했습니다! 내일 다시 방문해주세요."
-            st.session_state.attendance_points_today_given = True
-        elif last_date_obj == today - timedelta(days=1):
-            can_check_in = True
-            message = "오늘 출석체크를 해주세요!"
-            st.session_state.attendance_points_today_given = False
-        else:
-            st.session_state.consecutive_days = 0
-            can_check_in = True
-            message = "연속 출석 기록이 초기화되었습니다. 다시 시작하세요!"
-            st.session_state.attendance_points_today_given = False
-    else:
-        st.session_state.consecutive_days = 0
-        can_check_in = True
-        message = "오늘 출석체크를 해주세요!"
-        st.session_state.attendance_points_today_given = False
-
-    st.write(f"현재 연속 출석: **{st.session_state.consecutive_days}일차**")
-
-    num_cols = 7
-    cols = st.columns(num_cols)
-    for i in range(7):
-        with cols[i]:
-            day_number = i + 1
-            is_checked_today = st.session_state.attendance_points_today_given
-            current_consecutive_days = st.session_state.consecutive_days
-            if is_checked_today:
-                if day_number <= current_consecutive_days:
-                    st.markdown(f"<div style='text-align: center; background-color: #d4edda; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: auto; border: 2px solid #28a745; color: #28a745; font-weight: bold;'>✅</div><div style='text-align: center; font-size: 0.8em;'>{day_number}일차</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"<div style='text-align: center; background-color: #f8f9fa; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: auto; border: 2px solid #6c757d; color: #6c757d; font-weight: bold;'>{day_number}</div><div style='text-align: center; font-size: 0.8em;'>{day_number}일차</div>", unsafe_allow_html=True)
-            else:
-                if day_number < current_consecutive_days + 1:
-                    st.markdown(f"<div style='text-align: center; background-color: #d4edda; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: auto; border: 2px solid #28a745; color: #28a745; font-weight: bold;'>✅</div><div style='text-align: center; font-size: 0.8em;'>{day_number}일차</div>", unsafe_allow_html=True)
-                elif day_number == current_consecutive_days + 1 and can_check_in:
-                    st.markdown(f"<div style='text-align: center; background-color: #e0f2f7; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: auto; border: 2px solid #007bff; color: #007bff; font-weight: bold;'>{day_number}</div><div style='text-align: center; font-size: 0.8em;'>{day_number}일차</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"<div style='text-align: center; background-color: #f8f9fa; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: auto; border: 2px solid #6c757d; color: #6c757d; font-weight: bold;'>{day_number}</div><div style='text-align: center; font-size: 0.8em;'>{day_number}일차</div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("출석 체크하기 (1P)", key="check_attendance_button", disabled=not can_check_in or st.session_state.attendance_points_today_given):
-        if can_check_in and not st.session_state.attendance_points_today_given:
-            st.session_state.points += 1
-            today_iso = today.isoformat()
-            if today_iso not in st.session_state.study_log:
-                st.session_state.study_log[today_iso] = {"topic": None, "step": "select_topic", "quiz_data": [], "quiz_index": 0, "point": 0, "balloons_shown_for_quest": False}
-            st.session_state.study_log[today_iso]["point"] = st.session_state.study_log[today_iso].get("point", 0) + 1
-
-            if st.session_state.last_attendance_date == (today - timedelta(days=1)).isoformat():
-                st.session_state.consecutive_days += 1
-            else:
-                st.session_state.consecutive_days = 1
-
-            st.session_state.last_attendance_date = today_iso
-            st.session_state.attendance_points_today_given = True
-
-            st.success("출석체크 완료! 1포인트를 획득했습니다! 🎉")
-            st.balloons()
-
-            current_consecutive = st.session_state.consecutive_days
-
-            if current_consecutive == 7:
-                st.session_state.points += 10
-                st.session_state.study_log[today_iso]["point"] = st.session_state.study_log[today_iso].get("point", 0) + 10
-                st.success("7일 연속 출석! 보너스 10포인트를 획득했습니다! 🥳")
-                st.session_state.consecutive_days = 0
-                st.balloons()
-            
+    already_checked = st.session_state.get('user_attendance_participate', False)
+    st.write(f"현재 연속 출석: **{st.session_state.get('user_consecutive_days', 0)}일**")
+    
+    if st.button("출석 체크하기", disabled=already_checked):
+        # 'with st.spinner(...)'는 API가 응답할 때까지 로딩 애니메이션을 보여줌
+        with st.spinner("출석 정보를 확인하는 중..."):
+            result = attendance_check_api(user_id)
+        
+        if "error" not in result:
+            # 성공 시 토스트 메시지를 띄우고 세션 상태를 업데이트
+            st.toast(f"✅ 출석 체크 완료! {result.get('bonus_message', '')}")
+            st.session_state.update(
+                user_total_point=result['total_point'],
+                user_consecutive_days=result['consecutive_days'],
+                user_attendance_participate=True
+            )
             st.rerun()
         else:
-            st.warning(message)
-    else:
-        if not can_check_in or st.session_state.attendance_points_today_given:
-            st.info(message)
-        else:
-            st.info(message)
-
-# ---------------------------
-# 포인트 상점 (전체)
-def shop_page():
-    st.title("🛍 포인트 상점")
-    st.write("포인트로 다양한 활동을 즐기고 상품을 교환하세요.")
-
-    if "points" not in st.session_state:
-        st.session_state.points = 0
-    if "study_log" not in st.session_state:
-        st.session_state.study_log = {}
-    if "ad_cooldown_active" not in st.session_state:
-        st.session_state.ad_cooldown_active = False
+            st.toast(f"🚨 {result['error']}", icon="🚨")
     
-    today = date.today().isoformat()
-    if today not in st.session_state.study_log:
-        st.session_state.study_log[today] = {
-            "topic": None, "step": "select_topic", "quiz_data": [],
-            "quiz_index": 0, "point": 0, "balloons_shown_for_quest": False
-        }
+    # 이미 참여했다면, 버튼 대신 안내 문구를 보여줌
+    if already_checked: 
+        st.info("오늘은 이미 출석체크를 완료했습니다.")
 
-    # 광고 시청 중인 경우 다른 탭 접근을 막음
-    if st.session_state.ad_cooldown_active:
-        ad_active_state()
-    else:
-        # 탭 구성: 게임, 광고, 출석체크
-        tab1, tab2, tab3 = st.tabs(["🎮 게임하고 포인트 적립", "📺 광고 보고 포인트 적립", "🗓️ 출석 체크"])
+def render_game_tab(user_id: str):
+    """'숫자 게임' 탭의 UI를 렌더링합니다."""
+    st.subheader("🎮 숫자 맞추기 게임")
+    if st.session_state.get('user_dailygame_participate', False):
+        st.info("오늘은 이미 게임에 참여했습니다. 내일 다시 도전해주세요!")
+        return
 
-        with tab1:
-            number_guessing_game()
+    st.write("1부터 100 사이의 숫자를 5번 안에 맞춰보세요! 정답 시 10 포인트 획득!")
+    
+    # st.session_state를 사용하여 게임 상태(시작 전, 진행 중, 종료)를 관리
+    if 'game' not in st.session_state:
+        st.session_state.game = {'state': 'ready'}
+    game = st.session_state.game
+
+    if game['state'] == 'ready':
+        if st.button("게임 시작!"):
+            # 게임 시작 버튼을 누르면 랜덤 숫자를 생성하고 상태를 'playing'으로 변경
+            game.update({'state': 'playing', 'secret': random.randint(1, 100), 'guesses': 0, 'message': '게임을 시작합니다.'})
+            st.rerun()
+    elif game['state'] == 'playing':
+        st.info(game['message'])
+        st.write(f"남은 기회: **{5 - game['guesses']}**")
+        guess = st.number_input("숫자를 입력하세요 (1-100)", min_value=1, max_value=100, key="guess_input", value=50)
         
-        with tab2:
-            ad_watching_reward()
-            
-        with tab3:
-            attendance_check()
+        if st.button("제출"):
+            game['guesses'] += 1
+            if guess == game['secret']: # 정답을 맞춘 경우
+                with st.spinner("정답 확인 중..."):
+                    result = game_result_api(user_id, won=True)
+                if "error" not in result:
+                    st.toast("🎉 정답! 10포인트를 획득했습니다!", icon="🎉")
+                    st.session_state.update(user_total_point=result['total_point'], user_dailygame_participate=True)
+                    st.balloons()
+                else: 
+                    st.toast(f"🚨 {result['error']}", icon="🚨")
+                game['state'] = 'over'; st.rerun()
+            elif game['guesses'] >= 5: # 기회를 모두 소진한 경우
+                st.warning(f"아쉽네요! 정답은 {game['secret']}였습니다.")
+                with st.spinner("결과 기록 중..."):
+                    game_result_api(user_id, won=False) # 패배 결과 전송
+                st.toast("게임 참여가 기록되었습니다.", icon="💾")
+                st.session_state.user_dailygame_participate = True
+                game['state'] = 'over'; st.rerun()
+            else: # 오답인 경우 (기회 남음)
+                game['message'] = f"'{guess}'보다 더 낮은 숫자입니다!" if guess > game['secret'] else f"'{guess}'보다 더 높은 숫자입니다!"
+                st.rerun()
+    elif game['state'] == 'over':
+        st.info("게임이 종료되었습니다.")
+        if st.button("돌아가기"): game['state'] = 'ready'; st.rerun()
+
+def render_ad_tab(user_id: str):
+    """'광고 보기' 탭의 UI를 렌더링합니다."""
+    st.subheader("📺 광고 보고 포인트 적립")
+    participation_count = st.session_state.get('user_ad_participation', 0)
+    already_participated_fully = (participation_count >= 3)
+    st.write(f"오늘 광고 참여 횟수: **{participation_count}/3**")
+
+    if st.button("📺 광고 시청하기 (5점)", disabled=already_participated_fully):
+        with st.spinner("광고를 시청하는 중..."):
+            time.sleep(2) # 실제 광고 대신 2초 대기
+            result = ad_points_api(user_id)
+        if "error" not in result:
+            st.toast("✅ 광고 시청 완료! 5포인트를 획득했습니다!")
+            st.session_state.update(
+                user_total_point=result['total_point'], 
+                user_ad_participation=result['new_ad_count']
+            )
+            st.balloons(); st.rerun()
+        else: 
+            st.toast(f"🚨 {result['error']}", icon="🚨")
+    
+    if already_participated_fully: 
+        st.info("오늘은 광고 시청 기회를 모두 사용했습니다.")
+
+# --- 메인 페이지 함수 ---
+def shop_page():
+    """포인트 획득 페이지 전체를 렌더링하는 메인 함수입니다."""
+    st.title("🎁 포인트 획득")
+    
+    # 로그인 상태가 아니면 경고 메시지를 보여주고 함수를 종료
+    if not st.session_state.get("authenticated"):
+        st.warning("로그인이 필요한 서비스입니다."); return
+
+    # st.session_state에서 현재 로그인한 사용자 ID를 가져옴
+    user_id = st.session_state.get("user_id")
+    
+    # 세션이 시작된 후 처음 페이지에 방문했을 때만 사용자 정보를 불러옴
+    # 'user_status_loaded' 플래그를 사용하여 API 중복 호출을 방지
+    if 'user_status_loaded' not in st.session_state:
+        with st.spinner("사용자 정보를 불러오는 중..."):
+            status_data = get_user_status_api(user_id)
+        if status_data:
+            # API 호출에 성공하면, 가져온 데이터로 st.session_state를 업데이트
+            st.session_state.update(
+                user_total_point=status_data.get('total_point', 0),
+                user_attendance_participate=status_data.get('attendance_participate', False),
+                user_ad_participation=status_data.get('ad_participation', 0),
+                user_dailygame_participate=status_data.get('dailygame_participate', False),
+                user_consecutive_days=status_data.get('consecutive_days', 0),
+                user_status_loaded=True # 데이터 로드 완료 플래그를 True로 설정
+            )
+        else:
+            st.error("사용자 정보를 불러오는 데 실패했습니다. 페이지를 새로고침 해주세요.")
+            return
+
+    tab1, tab2, tab3 = st.tabs(["🗓️ 출석 체크", "🎮 숫자 게임", "📺 광고 보기"])
+    with tab1: render_attendance_tab(user_id)
+    with tab2: render_game_tab(user_id)
+    with tab3: render_ad_tab(user_id)
