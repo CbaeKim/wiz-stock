@@ -46,6 +46,8 @@ def request_gem(text: str, prompt: str, model: str = 'gemini-2.5-flash') -> str:
         }
     ]
 
+    time.sleep(25)
+
     response = client.generate_content(
         contents = contents
     )
@@ -144,17 +146,17 @@ class GetNewsData():
         part = '[next_news]'.join(results)
 
         prompt_text = """
-        너는 경제 뉴스 분석 전문가다.
-        아래 입력된 뉴스들에 대해 감성분석을 수행하라.
-        각 뉴스는 문자열 "[next_news]"로 구분되어 있다.
-        뉴스 분석 시, 하나의 뉴스가 끝나면 다음 뉴스는 "[next_news]"로 시작한다.
+        당신은 경제 뉴스 분석 전문가입니다.
+        아래 입력된 뉴스들에 대해 감성분석을 수행하세요.
+        각 뉴스는 문자열 "[next_news]"로 구분되어 있습니다.
+        뉴스 분석 시, 하나의 뉴스가 끝나면 다음 뉴스는 "[next_news]"로 시작합니다.
 
         [분석 규칙]
         1. 감성 점수 범위:
         - 긍정(positive): 51 ~ 100점
         - 부정(negative): 1 ~ 50점
-        2. 분석 결과는 각 뉴스의 날짜와 점수로만 표현하라.
-        3. 반드시 JSON 배열 형식으로 출력하되, 개행 없이 한 줄로 작성하라.
+        2. 분석 결과는 각 뉴스의 날짜와 점수로만 표현하세요.
+        3. 반드시 무조건 JSON 배열 형식으로 출력하고, 개행 없이 한 줄로 작성하세요.
 
         [출력 예시]
         [{"date":"2025-01-01","score":51},{"date":"2025-01-02","score":45}]
@@ -170,7 +172,6 @@ class GetNewsData():
             final_dict = json.loads(prompt_result)
             print(type(final_dict))
             print("Translate Dictionary Success!")
-            time.sleep(30)
             
             return final_dict
         except:
@@ -183,7 +184,6 @@ class GetNewsData():
                 final_dict = json.loads(prompt_result)
                 print(type(final_dict))
                 print("Translate Dictionary Success!")
-                time.sleep(30)
             
                 return final_dict
             except:
@@ -195,7 +195,6 @@ class GetNewsData():
                 final_dict = json.loads(prompt_result)
                 print(type(final_dict))
                 print("Translate Dictionary Success!")
-                time.sleep(30)
             
                 return final_dict
 

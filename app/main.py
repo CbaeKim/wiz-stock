@@ -34,7 +34,7 @@ def reset_day_process():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """ A function to run when the server starts """
-    scheduler.add_job(get_news_datas, CronTrigger(hour = 10, minute = 0))      # AM 10:00
+    scheduler.add_job(get_news_datas, CronTrigger(hour = 10, minute = 43))      # AM 10:00
     scheduler.add_job(get_news_datas, CronTrigger(hour = 15, minute = 30))      # PM 3:30
     scheduler.add_job(get_news_datas, CronTrigger(hour = 18, minute = 0))      # PM 6:00
     scheduler.add_job(reset_day_process, CronTrigger(hour = 0, minute = 0))    # AM 12:00
