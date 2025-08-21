@@ -11,6 +11,7 @@ from app_pages.pred_stock_page import predict_stock_page
 from app_pages.community_page import community_page
 from app_pages.collection_page import collection_page
 from app_pages.indicator_page import indicator_page
+from app_pages.point_event_page import point_event_page
 from app_pages.shop_page import shop_page
 from app_pages.analyst_page import analyst_page
 from app_pages.mypage_page import mypage_content
@@ -56,6 +57,8 @@ if st.session_state.authenticated:
         collection_page()
     elif st.session_state.page == "보조지표 제공":
         indicator_page()
+    elif st.session_state.page == "포인트 이벤트":
+        point_event_page()
     elif st.session_state.page == "포인트 상점":
         shop_page()
     elif st.session_state.page == "애널리스트 페이지":
