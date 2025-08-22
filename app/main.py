@@ -7,7 +7,7 @@ from app.dependency.connect_supabase import connect_supabase
 import asyncio, subprocess
 
 # add router files
-from app.routers import login, quiz, mypage_router, sign_up, point, shop_router
+from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock
 
 def get_news_datas():
     """ A function to run when the server starts """
@@ -16,6 +16,14 @@ def get_news_datas():
     subprocess.run(['python', './data/DataPipeline.py'])
 
     print("Process Complete.")
+
+def run_predict_modeling():
+    """Function to run PredictModel.py"""
+    print("[Function: run_predict_modeling] Start predictive modeling process.")
+    
+    subprocess.run(['python', './data/PredictModel.py'])
+    
+    print("Predictive Modeling Complete.")
 
 def reset_day_process():
     """ Function to reset participation values """
@@ -36,13 +44,12 @@ async def lifespan(app: FastAPI):
     """ A function to run when the server starts """
     scheduler.add_job(get_news_datas, CronTrigger(hour = 10, minute = 43))      # AM 10:00
     scheduler.add_job(get_news_datas, CronTrigger(hour = 15, minute = 30))      # PM 3:30
+    scheduler.add_job(run_predict_modeling, CronTrigger(hour = 16, minute = 0)) # PM 4:00
     scheduler.add_job(get_news_datas, CronTrigger(hour = 18, minute = 0))      # PM 6:00
     scheduler.add_job(reset_day_process, CronTrigger(hour = 0, minute = 0))    # AM 12:00
 
     scheduler.start()
-
     yield
-
     scheduler.shutdown()
 
 
@@ -55,6 +62,7 @@ app.include_router(mypage_router.router)    # mypage 관련 기능'
 app.include_router(sign_up.router)
 app.include_router(point.router)
 app.include_router(shop_router.router)
+app.include_router(pred_stock.router)
 
 @app.get("/")
 def read_root():
