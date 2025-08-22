@@ -19,17 +19,23 @@ def initialize_session_state():
         st.session_state.last_ad_watch_time = None
     if "ad_cooldown_active" not in st.session_state:
         st.session_state.ad_cooldown_active = False
-    if "game_state" not in st.session_state: 
-        st.session_state.game_state = "initial"
-    if "secret_number" not in st.session_state: 
+    if "game_state" not in st.session_state:
+        st.session_state.game_state = {
+            "step": "initial",
+            "can_participate": None,
+            "selected_stock_code": None,
+            "selected_stock_name": None,
+            "prediction_submitted": False
+        }
+    if "secret_number" not in st.session_state:
         st.session_state.secret_number = 0
-    if "guesses" not in st.session_state: 
+    if "guesses" not in st.session_state:
         st.session_state.guesses = 0
-    if "game_message" not in st.session_state: 
+    if "game_message" not in st.session_state:
         st.session_state.game_message = ""
     if "game_cooldown_start_time" not in st.session_state:
         st.session_state.game_cooldown_start_time = None
-    if "last_guess_value" not in st.session_state: 
+    if "last_guess_value" not in st.session_state:
         st.session_state.last_guess_value = 50
     if "game_over_reason" not in st.session_state:
         st.session_state.game_over_reason = ""
