@@ -23,30 +23,24 @@ def request_table(table_name) -> pd.DataFrame:
     while True:
         start_index = page * page_size
         end_index = start_index + page_size - 1
-
-        # print(f"{page + 1}번째 페이지 데이터 요청 중 (범위: {start_index} - {end_index})...")
-
-        # range()를 사용하여 페이지별로 데이터 요청
         response = (supabase.from_(table_name).select('*').range(start_index, end_index).execute())
-
         data = response.data
 
-        if not data:
+        if not data and page == 0: # 첫 페이지부터 데이터가 없으면 바로 중단
             print("[Alert] No Data in table")
+            return pd.DataFrame() # 비어있는 데이터프레임 반환
 
         all_data.extend(data)
 
-        # 가져온 데이터가 페이지 크기보다 작으면 마지막 페이지이므로 종료
         if len(data) < page_size:
             print("[Alert] All data get Success")
             break
-
         page += 1
 
     df = pd.DataFrame(all_data)
 
-    # Data Preprocess
-    df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
+    if not df.empty and 'stock_code' in df.columns:
+        df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
 
     return df
 
