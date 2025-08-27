@@ -103,7 +103,7 @@ def get_ma(df, close_col, ma_value, ma):
     # EMA 계산일 경우 실행
     elif ma == 'ema':
         try:
-		        # 추세 : mean() / 변동성 : std(), var()
+                # 추세 : mean() / 변동성 : std(), var()
             ema = df[close_col].ewm(span = ma_value).mean()
             return ema
 
@@ -117,6 +117,39 @@ def get_macd(df, close_col, ma_value = [12, 26]):
     ema_2 = get_ma(df, close_col, ma_value = ma_value[1], ma = 'ema')
 
     return (ema_1 - ema_2)
+
+def macd_diff_accel(df: pd.DataFrame,
+                    macd_col: str = "MACD",
+                    sig_col: str = "MACD_Signal",
+                    out_col: str = "MACD_Diff_Accel") -> pd.Series:
+    """
+    MACD - Signal 의 변화율(= 가속도)을 계산합니다.
+    → 직전 대비 확장/축소 속도를 나타내는 연속형 피처
+    """
+    diff = df[macd_col] - df[sig_col]
+    accel = diff.diff()
+    return pd.Series(accel, index=df.index, name=out_col)
+
+
+def macd_soft_score(df: pd.DataFrame,
+                    macd_col: str = "MACD",
+                    sig_col: str = "MACD_Signal",
+                    denom_col: str = "ATR",   # 변동성 기준 정규화
+                    scale: float = 100.0,
+                    alpha: float = 2.0,
+                    out_col: str = "MACD_Soft_-100_100") -> pd.Series:
+    """
+    Soft Score: tanh( α × (MACD - Signal)/denom ) × scale
+    - 범위: 대략 -scale ~ +scale (기본: -100 ~ 100)
+    - denom: ATR(변동성)으로 나누어 종목/가격대 차이를 정규화
+    - alpha: 민감도 조절 (값 ↑ = 더 날카롭게 반응)
+    """
+    eps = 1e-9
+    raw = alpha * ((df[macd_col] - df[sig_col]) /
+                   (df[denom_col].replace(0, np.nan) + eps))
+    score = np.tanh(raw) * scale
+    return pd.Series(score, index=df.index, name=out_col)
+
 
 def get_bollinger_bands(df, close_col, ma_value = 20, visualization = False):
     """ 
@@ -215,10 +248,10 @@ def get_adx(df, high_col, low_col, close_col, period=14):
     # TR(True Range, 당일 가격의 움직임의 폭, 갭까지 고려하여 실제로 얼마나 변동되었는지 계산)
     # .abs = 절대값, .shift= 전날 값을 가져옴
     tr = pd.concat([
-        df[high_col] - df[low_col],                         # 오늘 고가 - 오늘 저가 = 하루간의 가격폭(오늘 종가)
-        (df[high_col] - df[close_col].shift(1)).abs(),      # 오늘 고가 - 어제 종가 = 갭상승
-        (df[low_col] - df[close_col].shift(1)).abs()        # 오늘 저가 - 어제 종가 = 갭하락
-    ], axis=1).max(axis=1)                                  # 세가지 값 중 가장 큰 값이 실제 가격 폭
+        df[high_col] - df[low_col],                       # 오늘 고가 - 오늘 저가 = 하루간의 가격폭(오늘 종가)
+        (df[high_col] - df[close_col].shift(1)).abs(),    # 오늘 고가 - 어제 종가 = 갭상승
+        (df[low_col] - df[close_col].shift(1)).abs()      # 오늘 저가 - 어제 종가 = 갭하락
+    ], axis=1).max(axis=1)                                # 세가지 값 중 가장 큰 값이 실제 가격 폭
 
     # +DM, -DM
     up_move = df[high_col] - df[high_col].shift(1)  # +DM(상승한 값) = 오늘 고가 - 전일 고가
@@ -251,6 +284,7 @@ def get_adx(df, high_col, low_col, close_col, period=14):
 def get_atr(df, high_col, low_col, close_col, window=14):
     """ ATR 산출 함수 """
     ### TR 계산
+    
     ## 1. 당일 고가 - 당일 저가
     range1 = df[high_col] - df[low_col]
 
@@ -276,102 +310,168 @@ def get_obv(df, close_col, volume_col):
     # close_col: 종가 컬럼(str)
     # volume_col: 거래량 컬럼(str)
     '''
+    
     # OBV 초기값 설정
     obv = [0]
     for i in range(1, len(df)): # 전일 종가와 당일 종가를 비교해야하므로
+        
         # 당일 종가 > 전일 종가 --> OBV = OBV + 거래량
         if df[close_col].iloc[i] > df[close_col].iloc[i-1]:
             obv.append(obv[-1] + df[volume_col].iloc[i])
+        
         # 당일 종가 < 전일 종가 --> OBV = OBV - 거래량
         elif df[close_col].iloc[i] < df[close_col].iloc[i-1]:
             obv.append(obv[-1] - df[volume_col].iloc[i])
         else:
+            
             # 당일 종가 = 전일 종가 --> OBV 유지
             obv.append(obv[-1])
 
     return pd.Series(obv, index = df.index)
 
+# 골든 크로스, 데드 크로스 함수
+def get_cross_signal(df, short_ma_col, long_ma_col):
+    """
+    단기 및 장기 이동평균선을 기반으로 골든크로스, 데드크로스 신호를 계산합니다.
+
+    Args:
+        df (pd.DataFrame): 이동평균선 데이터가 포함된 데이터프레임
+        short_ma_col (str): 단기 이동평균선 컬럼명
+        long_ma_col (str): 장기 이동평균선 컬럼명
+
+    Returns:
+        pd.Series: 1(골든크로스), -1(데드크로스), 0(유지) 신호를 담은 Series
+    """
+    signal = pd.Series(0, index=df.index)
+    
+    # 어제 데이터와 오늘 데이터를 비교하기 위해 shift(1) 사용
+    yesterday_short_ma = df[short_ma_col].shift(1)
+    yesterday_long_ma = df[long_ma_col].shift(1)
+    today_short_ma = df[short_ma_col]
+    today_long_ma = df[long_ma_col]
+    
+    # 골든크로스 조건: (어제 단기 < 어제 장기) and (오늘 단기 > 오늘 장기)
+    golden_cross = (yesterday_short_ma < yesterday_long_ma) & (today_short_ma > today_long_ma)
+    
+    # 데드크로스 조건: (어제 단기 > 어제 장기) and (오늘 단기 < 오늘 장기)
+    dead_cross = (yesterday_short_ma > yesterday_long_ma) & (today_short_ma < today_long_ma)
+    
+    signal[golden_cross] = 1
+    signal[dead_cross] = -1
+    
+    return signal
+
+# ===================================================================
 def get_technical_data():
     """ 주가 데이터 Load & 기술적 분석 지표를 계산 후 DataFrame으로 반환 """
     current_path = Path.cwd()
     file_path = current_path / 'cache/stock_data_cache.csv'
     df = pd.read_csv(file_path)
     df['stock_code'] = df['stock_code'].astype(str).str.zfill(6)
+    
+    # 'Date' 컬럼을 datetime 객체로 변환하여 정렬 (groupby 전 필수)
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values(by=['stock_code', 'Date'])
 
     # 이동 평균선 (SMA, EMA)
     try:
-        df['SMA_5'] = get_ma(df, 'Close', ma_value=5, ma='sma')
-        df['SMA_20'] = get_ma(df, 'Close', ma_value=20, ma='sma')
-        df['EMA_12'] = get_ma(df, 'Close', ma_value=12, ma='ema')
-        df['EMA_26'] = get_ma(df, 'Close', ma_value=26, ma='ema')
+        df['SMA_5'] = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=5, min_periods=1).mean())
+        df['SMA_20'] = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=20, min_periods=1).mean())
+        df['SMA_50'] = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=50, min_periods=1).mean())
+        df['SMA_200'] = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=200, min_periods=1).mean())
+        
+        df['EMA_12'] = df.groupby('stock_code')['Close'].transform(lambda x: x.ewm(span=12, adjust=False).mean())
+        df['EMA_26'] = df.groupby('stock_code')['Close'].transform(lambda x: x.ewm(span=26, adjust=False).mean())
     except Exception as e:
         print(f"Error SMA/EMA: {e}")
+    
+    # 골든크로스 & 데드크로스
+    try:
+        # groupby()를 이용해 종목(stock_code)별로 get_cross_signal 함수를 적용
+        cross_signals = df.groupby('stock_code', group_keys=False).apply(
+            lambda x: get_cross_signal(x, 'SMA_50', 'SMA_200')
+        )
+        df['Cross_Signal'] = cross_signals
+    except Exception as e:
+        print(f"Error Cross Signal: {e}")
+
+    # ATR (Average True Range)
+    try:
+        df['ATR'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_atr(x, high_col='High', low_col='Low', close_col='Close', window=14))
+    except Exception as e:
+        print(f"Error ATR: {e}")
 
     # MACD
     try:
-        macd_result = get_macd(df, 'Close')
-        df['MACD'] = macd_result
-        # Signal Line (MACD의 9일 EMA)
-        df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-        # MACD Histogram
+        df['MACD'] = df['EMA_12'] - df['EMA_26']
+        df['MACD_Signal'] = df.groupby('stock_code')['MACD'].transform(lambda x: x.ewm(span=9, adjust=False).mean())
         df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
+        df['MACD_Diff_Accel'] = macd_diff_accel(df)
+        df['MACD_Soft_-100_100'] = macd_soft_score(df, denom_col="ATR", alpha=2.0)
     except Exception as e:
-         print(f"Error MACD: {e}")
+        print(f"Error MACD: {e}")
 
-    # 볼린저 밴드
+    # 볼린저 밴드 
     try:
-        middle_band, upper_band, lower_band = get_bollinger_bands(df, 'Close', ma_value=20, visualization=False)
-        df['Bollinger_Mid'] = middle_band
-        df['Bollinger_Upper'] = upper_band
-        df['Bollinger_Lower'] = lower_band
+        df['Bollinger_Mid'] = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=20, min_periods=1).mean())
+        std_dev = df.groupby('stock_code')['Close'].transform(lambda x: x.rolling(window=20, min_periods=1).std())
+        df['Bollinger_Upper'] = df['Bollinger_Mid'] + (std_dev * 2)
+        df['Bollinger_Lower'] = df['Bollinger_Mid'] - (std_dev * 2)
     except Exception as e:
         print(f"Error Bollinger_bands: {e}")
 
-    # RSI
+    # RSI 
     try:
-        df['RSI'] = get_rsi(df, day=14)
+        df['RSI'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_rsi(x, day=14))
     except Exception as e:
         print(f"Error RSI: {e}")
 
     # Stochastic Oscillator
     try:
-        stochastic_result = get_stochastic(df, k_day=14, d_day=3)
-        df['%K'] = stochastic_result['%K']
-        df['%D'] = stochastic_result['%D']
+        stochastic_df = df.groupby('stock_code', group_keys=False).apply(lambda x: get_stochastic(x, k_day=14, d_day=3))
+        df = pd.concat([df, stochastic_df], axis=1)
     except Exception as e:
         print(f"Error Stochastic: {e}")
 
-    # ADX (Average Directional Index)
+    # ADX (Average Directional Index) 
     try:
-        adx_result = get_adx(df, high_col='High', low_col='Low', close_col='Close', period=14)
-        df['ADX'] = adx_result['ADX']
-        df['+DI'] = adx_result['+DI']
-        df['-DI'] = adx_result['-DI']
+        adx_df = df.groupby('stock_code', group_keys=False).apply(lambda x: get_adx(x, high_col='High', low_col='Low', close_col='Close', period=14))
+        df = pd.concat([df, adx_df], axis=1)
     except Exception as e:
         print(f"Error ADX: {e}")
 
-    # ATR (Average True Range)
-    try:
-        df['ATR'] = get_atr(df, high_col='High', low_col='Low', close_col='Close', window=14)
-    except Exception as e:
-        print(f"Error ATR: {e}")
-
     # OBV (On-Balance Volume)
     try:
-        df['OBV'] = get_obv(df, close_col='Close', volume_col='Volume')
+        df['OBV'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_obv(x, close_col='Close', volume_col='Volume'))
     except Exception as e:
         print(f"Error OBV: {e}")
 
     # Final DataFrame Reprocess
     df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
-    df = df.replace(np.nan, 0)
+    df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
 
+    # 컬럼 리스트
     change_columns = ['Open', 'High', 'Low', 'Close',
-       'Dividends', 'Stock Splits', 'SMA_5', 'SMA_20', 'EMA_12', 'EMA_26',
-       'MACD', 'MACD_Signal', 'MACD_Hist', 'Bollinger_Mid', 'Bollinger_Upper',
-       'Bollinger_Lower', 'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
+       'Dividends', 'Stock Splits', 'SMA_5', 'SMA_20', 'SMA_50', 'SMA_200',
+       'EMA_12', 'EMA_26', 'MACD', 'MACD_Signal', 'MACD_Hist',
+       'MACD_Diff_Accel', 'MACD_Soft_-100_100',
+       'Bollinger_Mid', 'Bollinger_Upper', 'Bollinger_Lower',
+       'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 
     df[change_columns] = df[change_columns].round(2)
     df.to_csv(current_path / 'cache/stock_data.csv', index = False)
     
     return df
+
+# 함수 실행 코드
+if __name__ == "__main__":
+
+    # 캐시 파일을 읽어와 기술적 지표(골든/데드 크로스 포함) 계산 후 'stock_data.csv'로 저장
+    print("기술적 지표 계산을 시작합니다...")
+    final_data = get_technical_data()
+    print("모든 계산이 완료되었으며, 'cache/stock_data.csv' 파일에 저장되었습니다.")
+    
+    # 계산된 신호 확인 (결과 확인용)
+    print("\n--- Cross Signal 계산 결과 ---")
+    print(final_data['Cross_Signal'].value_counts())
+    print("----------------------------")
