@@ -25,6 +25,14 @@ def run_predict_modeling():
     
     print("Predictive Modeling Complete.")
 
+def run_auto_grading():
+    """Function to run GradePredictions.py for automatic grading"""
+    print("[Function: run_auto_grading] Start automatic grading process.")
+    
+    subprocess.run(['python', './data/GradePredictions.py'])
+    
+    print("Automatic Grading Complete.")
+
 def reset_day_process():
     """ Function to reset participation values """
     print("[Function: reset_day_process] Start")
@@ -45,6 +53,7 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(get_news_datas, CronTrigger(hour = 10, minute = 43))      # AM 10:00
     scheduler.add_job(get_news_datas, CronTrigger(hour = 15, minute = 30))      # PM 3:30
     scheduler.add_job(run_predict_modeling, CronTrigger(hour = 16, minute = 0)) # PM 4:00
+    scheduler.add_job(run_auto_grading, CronTrigger(hour = 16, minute = 30 ))   # PM 4:30
     scheduler.add_job(get_news_datas, CronTrigger(hour = 18, minute = 0))      # PM 6:00
     scheduler.add_job(reset_day_process, CronTrigger(hour = 0, minute = 0))    # AM 12:00
 
