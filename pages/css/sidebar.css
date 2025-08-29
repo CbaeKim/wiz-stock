@@ -1,0 +1,194 @@
+/* 전체 레이아웃 설정 */
+html,
+body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    /* overflow: hidden 제거 - 콘텐츠 영역 스크롤 허용 */
+    /* flex 제거 - fixed 사이드바와 margin을 사용한 레이아웃으로 변경 */
+}
+
+/* 사이드바 스타일 */
+.sidebar {
+    width: 20vw;
+    min-width: 250px;
+    background: linear-gradient(180deg, #2c3e50 0%, #243140 100%);
+    color: white;
+    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    
+    /* 사이드바 독립 스크롤 설정 */
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    /* 고정 포지션으로 변경하여 스크롤 시에도 위치 유지 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.site-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffd700;
+    text-decoration: none;
+    margin-left: 10px;
+    margin-bottom: 50px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    /* 텍스트 그림자 추가 */
+}
+
+.sidebar-nav {
+    padding-top: 20px;
+    margin-top: 10px;
+    /* flex: 1 제거 - 메뉴와 로그아웃 버튼 사이 간격 줄이기 위함 */
+}
+
+/* 메뉴 링크 스타일 */
+.sidebar-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 15px;
+    display: block;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background-color: #34495e;
+    transform: translateX(5px);
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    /* 호버 시 그림자 추가 */
+}
+
+/* 로그아웃 버튼 스타일 */
+.logout-button {
+    background: linear-gradient(180deg, #1a242f 0%, #101820 100%);
+    /* 그라데이션 적용 */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    margin-top: 20px;
+    /* 메뉴와의 적절한 간격 설정 */
+    display: block;
+    width: 100%;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    /* 버튼 그림자 추가 */
+}
+
+.logout-button:hover {
+    background: linear-gradient(180deg, #cb4444 0%, #cb4444 100%);
+    /* 호버 시 더 어두운 그라데이션 */
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+    /* 호버 시 그림자 더 진하게 */
+}
+
+/* 구분선 스타일 */
+.separator {
+    border: 0;
+    height: 1px;
+    background: #444;
+    margin: 20px 0 10px;
+    /* 간격 줄임 */
+}
+
+/* 랭킹 UI 스타일 */
+.ranking-section {
+    margin-top: 20px;
+    /* 간격 줄임 */
+    padding-top: 15px;
+    /* 간격 줄임 */
+    border-top: 1px solid #444;
+}
+
+.ranking-title {
+    font-size: 18px;
+    color: #eee;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    /* 텍스트 그림자 추가 */
+}
+
+.ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    /* 랭킹 아이템 그라데이션 */
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    /* 아이템 그림자 */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ranking-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 1px 3px 7px rgba(0, 0, 0, 0.4);
+}
+
+.ranking-number {
+    font-weight: bold;
+    font-size: 16px;
+    width: 25px;
+    text-align: center;
+    margin-right: 15px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    /* 텍스트 그림자 */
+}
+
+.ranking-number:nth-child(1) {
+    color: #ffd700;
+    /* 금색 */
+}
+
+.ranking-number:nth-child(2) {
+    color: #c0c0c0;
+    /* 은색 */
+}
+
+.ranking-number:nth-child(3) {
+    color: #cd7f32;
+    /* 동색 */
+}
+
+.user-name {
+    font-size: 15px;
+    color: #ddd;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    /* 텍스트 그림자 */
+}
+
+/* 저작권 문구 스타일 - 하단 고정 */
+.copyright-text {
+    font-size: 12px;
+    color: #888;
+    text-align: right;
+    /* 중앙 정렬로 변경 */
+    margin-top: auto;
+    /* 자동으로 하단에 배치 */
+    padding-top: 7px;
+    padding-bottom: 20px;
+    /* 하단 여백 추가 */
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+    /* 크기 고정 */
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지</title>
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/my_page_style.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2><a href="../index.html" class="site-title">위즈주식</a></h2>
+        <nav class="sidebar-nav">
+            <a href="../index.html">주식 교육 및 퀴즈</a>
+            <a href="./stock_prediction_game.html">주가예측게임</a>
+            <a href="./point_store.html">포인트 상점</a>
+            <a href="index.html">이벤트</a>
+            <a href="./my_page.html" class="active">마이페이지</a>
+        </nav>
+        <!-- <hr class="separator"> -->
+        <button id="logout-btn" class="logout-button">로그아웃</button>
+        <section class="ranking-section">
+            <h3 class="ranking-title">🏆 실시간 보유 포인트 순위</h3>
+            <ol class="ranking-list">
+                <li class="ranking-item">
+                    <span class="ranking-number">1</span>
+                    <span class="user-name">김민준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">2</span>
+                    <span class="user-name">박서준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">3</span>
+                    <span class="user-name">이지훈</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">4</span>
+                    <span class="user-name">최은서</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">5</span>
+                    <span class="user-name">정우진</span>
+                </li>
+            </ol>
+        </section>
+        <p class="copyright-text">Copyright 2025. kdt-team-one All rights reserved.</p>        
+    </div>
+
+    <div class="content">
+        <div class="page-container">
+            <header class="profile-header">
+                <span class="user-icon">👤</span>
+                <h1>마이페이지</h1>
+            </header>
+
+            <section class="info-section">
+                <h2 class="section-title">내 정보</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">닉네임:</span>
+                        <span class="value">홍길동</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">총 출석일:</span>
+                        <span class="value">5</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">아이디:</span>
+                        <span class="value">gildong_hong@gmail.com</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">연속 출석일:</span>
+                        <span class="value">5</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">연락처:</span>
+                        <span class="value">01012345678</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">마지막 출석일:</span>
+                        <span class="value">2025-08-20</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">이메일:</span>
+                        <span class="value">미등록</span>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="separator">
+
+            <section class="point-section">
+                <div class="point-grid">
+                    <div class="point-item">
+                        <h3 class="point-title">총 보유 포인트</h3>
+                        <div class="point-value">78 P</div>
+                        <span class="point-change">↑ +20 P</span>
+                    </div>
+                    <div class="point-item">
+                        <h3 class="point-title">일일 추가 포인트 보너스</h3>
+                        <div class="point-value">20 P</div>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="separator">
+
+            <section class="badge-section">
+                <h2 class="section-title">획득한 훈장</h2>
+                <p>아직 획득한 훈장이 없습니다.</p>
+            </section>
+
+            <hr class="separator">
+
+            <section class="indicator-section">
+                <h2 class="section-title">구매한 보조지표</h2>
+                <p>아직 구매한 보조지표가 없습니다. ‘보조지표 상점’ 페이지에서 구매할 수 있습니다.</p>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logout-btn');
+
+            logoutBtn.addEventListener('click', function() {
+                alert('로그아웃 되었습니다.');
+            });
+        });
+    </script>
+</body>
+</html>

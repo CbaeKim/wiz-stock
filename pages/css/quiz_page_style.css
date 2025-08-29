@@ -1,0 +1,134 @@
+/* quiz_page_style.css */
+
+.quiz-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #363636;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.quiz-page .main-title {
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.quiz-page .subtitle {
+    color: #ccc;
+    margin-bottom: 30px;
+}
+
+.question-box {
+    width: 100%;
+    max-width: 600px;
+    background-color: #243140;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.question-text {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.answer-option {
+    padding: 15px 20px;
+    background-color: #f1f1f1;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.answer-option:hover {
+    background-color: #c9c9c9;
+}
+
+.answer-option.selected {
+    border-color: #4CAF50; /* 선택된 답변의 테두리 색상 */
+    background-color: #e7f3e7;
+}
+
+.submit-quiz-button {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-quiz-button:hover {
+    background-color: #45a049;
+}
+
+.answer-option.correct {
+    background-color: #c2eccc; /* 연한 초록색 */
+    border-color: #28a745; /* 진한 초록색 */
+}
+
+.answer-option.wrong {
+    background-color: #f5bdc2; /* 연한 빨간색 */
+    border-color: #dc3545; /* 진한 빨간색 */
+}
+
+.next-quiz-button, .restart-quiz-button {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+.next-quiz-button:hover, .restart-quiz-button:hover {
+    background-color: #0056b3;
+}
+
+.result-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    background-color: #363636;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.result-page .main-title {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+}
+
+.result-page .subtitle {
+    color: #ccc;
+    margin-bottom: 30px;
+    font-size: 1.2rem;
+}
