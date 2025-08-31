@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위즈주식</title>
+    <link rel="stylesheet" href="./pages/css/sidebar.css">
+    <link rel="stylesheet" href="./pages/css/main_content_style.css">
+    <link rel="stylesheet" href="./pages/css/quiz_page_style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2><a href="index.html" class="site-title">위즈주식</a></h2>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="active">주식 교육 및 퀴즈</a>
+            <a href="./pages/stock_prediction_game.html">주가예측게임</a>
+            <a href="./pages/point_store.html">포인트 상점</a>
+            <a href="./pages/event.html">이벤트</a>
+            <a href="./pages/my_page.html">마이페이지</a>
+        </nav>
+        <button id="logout-btn" class="logout-button">로그아웃</button>
+        <section class="ranking-section">
+            <h3 class="ranking-title">🏆 실시간 보유 포인트 순위</h3>
+            <ol class="ranking-list">
+                <li class="ranking-item">
+                    <span class="ranking-number">1</span>
+                    <span class="user-name">김민준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">2</span>
+                    <span class="user-name">박서준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">3</span>
+                    <span class="user-name">이지훈</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">4</span>
+                    <span class="user-name">최은서</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">5</span>
+                    <span class="user-name">정우진</span>
+                </li>
+            </ol>
+        </section>
+        <p class="copyright-text">Copyright 2025. kdt-team-one All rights reserved.</p>
+    </div>
+
+    <div class="content">
+        <div class="content-container" id="main-content-container">
+            <header class="content-header">
+                <h1 class="main-title">오늘의 주식 퀴즈</h1>
+                <p class="subtitle">매일 새로운 퀴즈를 풀고 포인트를 얻어보세요!</p>
+            </header>
+
+            <section class="quiz-section">
+                <h2 class="quiz-title">오늘 공부할 주제를 선택하세요 (1일 1회)</h2>
+                <div class="quiz-container">
+                    <div class="quiz-box checked" data-quiz-type="basic">
+                        <span class="box-icon">💡</span>
+                        <span class="box-text">기초지식</span>
+                    </div>
+                    <div class="quiz-box" data-quiz-type="technical">
+                        <span class="box-icon">📈</span>
+                        <span class="box-text">기술적 지표</span>
+                    </div>
+                    <div class="quiz-box" data-quiz-type="financial">
+                        <span class="box-icon">📊</span>
+                        <span class="box-text">재무제표</span>
+                    </div>
+                </div>
+                <button class="start-quiz-button">퀴즈 시작하기</button>
+            </section>
+        </div>
+    </div>
+    // '퀴즈 시작하기' 버튼 실행 시 관련 UI 출력 및 로직은 quiz.js 참조
+    <script src="./js/quiz.js"></script>
+</body>
+</html>

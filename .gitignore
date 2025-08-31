@@ -4,9 +4,5 @@ test.ipynb
 gem_api.ipynb
 __pycache__/
 .ipynb_checkpoints/
-pages/
-images/
 .vscode
-js
 cache
-index.html

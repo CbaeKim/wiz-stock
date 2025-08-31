@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위즈주식 로그인</title>
+    <link rel="stylesheet" href="./css/login_style.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>
+            <span class="lock-icon">🔒</span>
+            위즈주식 로그인
+        </h2>
+
+        <form action="#" method="POST">
+            <div class="input-group">
+                <label for="username">아이디</label>
+                <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
+            </div>
+
+            <div class="input-group password-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+                <img src="../images/icon_close_eye.png" alt="비밀번호 숨기기" class="eye-icon" onclick="togglePassword()">
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="login-button">로그인</button>
+                <button type="button" class="signup-button">회원가입</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const eyeIcon = document.querySelector('.eye-icon');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.src = '../images/icon_eye.png'; // '비밀번호 보이기' 이미지로 변경
+                eyeIcon.alt = '비밀번호 보이기';
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.src = '../images/icon_close_eye.png'; // '비밀번호 숨기기' 이미지로 변경
+                eyeIcon.alt = '비밀번호 숨기기';
+            }
+        }
+    </script>
+
+</body>
+</html>

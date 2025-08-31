@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주가 예측 게임 - 위즈주식</title>
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/stock_prediction_style.css">
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2><a href="../index.html" class="site-title">위즈주식</a></h2>
+        <nav class="sidebar-nav">
+            <a href="../index.html">주식 교육 및 퀴즈</a>
+            <a href="./stock_prediction_game.html" class="active">주가예측게임</a>
+            <a href="./point_store.html">포인트 상점</a>
+            <a href="./event.html">이벤트</a>
+            <a href="./my_page.html">마이페이지</a>
+        </nav>
+        <button id="logout-btn" class="logout-button">로그아웃</button>
+        <section class="ranking-section">
+            <h3 class="ranking-title">🏆 실시간 보유 포인트 순위</h3>
+            <ol class="ranking-list">
+                <li class="ranking-item">
+                    <span class="ranking-number">1</span>
+                    <span class="user-name">김민준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">2</span>
+                    <span class="user-name">박서준</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">3</span>
+                    <span class="user-name">이지훈</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">4</span>
+                    <span class="user-name">최은서</span>
+                </li>
+                <li class="ranking-item">
+                    <span class="ranking-number">5</span>
+                    <span class="user-name">정우진</span>
+                </li>
+            </ol>
+        </section>
+        <p class="copyright-text">Copyright 2025. kdt-team-one All rights reserved.</p>
+    </div>
+
+    <div class="content">
+        <div class="game-container">
+            <!-- 메인 메뉴 화면 -->
+            <div class="main-menu" id="main-menu">
+                <header class="game-header">
+                    <h1 class="game-title">삼성전자 주가 예측</h1>
+                    <p class="game-subtitle">여러분의 생각을 알려주세요!</p>
+                </header>
+
+                <div class="menu-buttons">
+                    <button class="menu-btn prediction-btn-menu" id="start-prediction">
+                        <div class="btn-content">
+                            <span class="btn-icon">🎯</span>
+                            <span class="btn-title">주가 예측하기</span>
+                            <span class="btn-description">AI와 함께 내일의 주가를 예측해보세요</span>
+                        </div>
+                    </button>
+
+                    <button class="menu-btn history-btn-menu" id="view-history">
+                        <div class="btn-content">
+                            <span class="btn-icon">📊</span>
+                            <span class="btn-title">이전 예측 결과 보기</span>
+                            <span class="btn-description">지난 예측 기록과 정확도를 확인하세요</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 이전 예측 결과 화면 -->
+            <div class="history-view" id="history-view" style="display: none;">
+                <header class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-icon">📈</span>
+                        이전 예측 결과
+                    </h2>
+                    <button class="back-btn" id="back-from-history">
+                        <span class="back-icon">←</span>
+                        메인으로
+                    </button>
+                </header>
+
+                <div class="history-content">
+                    <div class="history-stats">
+                        <div class="stat-card">
+                            <span class="stat-number" id="total-predictions">5</span>
+                            <span class="stat-label">총 예측 횟수</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number accuracy" id="accuracy-rate">80%</span>
+                            <span class="stat-label">정확도</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="correct-predictions">4</span>
+                            <span class="stat-label">맞춘 횟수</span>
+                        </div>
+                    </div>
+
+                    <div class="history-list">
+                        <h3 class="history-list-title">최근 예측 기록</h3>
+                        <div class="history-items" id="history-items">
+                            <!-- 예측 기록들이 여기에 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주가 예측 게임 화면 -->
+            <div class="prediction-game" id="prediction-game" style="display: none;">
+                <header class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-icon">🎯</span>
+                        주가 예측 게임
+                    </h2>
+                    <button class="back-btn" id="back-from-game">
+                        <span class="back-icon">←</span>
+                        메인으로
+                    </button>
+                </header>
+
+                <div class="stock-info-card">
+                    <div class="stock-header">
+                        <span class="stock-icon">📈</span>
+                        <h2 class="stock-name">삼성전자 (005930)</h2>
+                    </div>
+
+                    <div class="current-price">
+                        <span class="price-label">현재가</span>
+                        <span class="price-value" id="current-price">62,000원</span>
+                    </div>
+
+                    <div class="ai-prediction-info">
+                        <h3 class="ai-title">
+                            <span class="ai-icon">🤖</span>
+                            AI는 이렇게 예측했어요!
+                        </h3>
+                        <div class="ai-info-grid">
+                            <div class="ai-info-item">
+                                <span class="ai-label">뉴스 감성 분석:</span>
+                                <span class="ai-value" id="news-sentiment">긍정적 전망</span>
+                            </div>
+                            <div class="ai-info-item">
+                                <span class="ai-label">이전 예측가:</span>
+                                <span class="ai-value" id="ai-prev-price">62,000원</span>
+                            </div>
+                            <div class="ai-info-item">
+                                <span class="ai-label">오늘 예측가:</span>
+                                <span class="ai-value ai-prediction" id="ai-today-price">62,300원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-section">
+                        <h3 class="prediction-title">내일의 주가를 예측해보세요!</h3>
+
+                        <div class="prediction-buttons">
+                            <button class="prediction-btn up-btn" data-prediction="up">
+                                <span class="btn-icon">📈</span>
+                                <span class="btn-text">UP</span>
+                                <span class="btn-desc">상승 예측</span>
+                            </button>
+
+                            <button class="prediction-btn down-btn" data-prediction="down">
+                                <span class="btn-icon">📉</span>
+                                <span class="btn-text">DOWN</span>
+                                <span class="btn-desc">하락 예측</span>
+                            </button>
+                        </div>
+
+                        <div class="user-input-section">
+                            <label for="user-prediction" class="input-label">
+                                나의 생각 (텍스트 입력):
+                            </label>
+                            <textarea id="user-prediction" class="prediction-textarea"
+                                placeholder="예측 근거를 입력해주세요 (선택사항)" maxlength="200"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-section" id="result-section" style="display: none;">
+                    <div class="result-card">
+                        <h3 class="result-title">
+                            <span class="result-icon">📊</span>
+                            나의 예측 결과
+                        </h3>
+                        <div class="result-content">
+                            <div class="result-item">
+                                <span class="result-label">나의 예측:</span>
+                                <span class="result-value" id="user-prediction-result">상승 예측</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">예측 근거:</span>
+                                <span class="result-value" id="user-reasoning">텍스트 입력 없음</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">AI와 일치도:</span>
+                                <span class="result-value" id="ai-match">일치함</span>
+                            </div>
+                        </div>
+
+                        <div class="accuracy-info">
+                            <p class="accuracy-text">
+                                <span class="accuracy-icon">💡</span>
+                                예측이 제출되었습니다. 내일 결과를 확인해보세요!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-section">
+                    <button class="submit-btn" id="submit-prediction">
+                        예측 제출하기
+                    </button>
+
+                    <button class="reset-btn" id="reset-game" style="display: none;">
+                        다시 예측하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/stock_prediction.js"></script>
+</body>
+
+</html>
