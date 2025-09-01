@@ -118,10 +118,26 @@ def main_content():
             with st.spinner("퀴즈를 불러오는 중입니다..."):
                 quiz_df = get_quizzes_from_api(topic)
             if not quiz_df.empty:
-                log.update({"topic": topic, "quiz_data": quiz_df, "step": "quiz"})
-                st.rerun() # 페이지를 새로고침하여 퀴즈 단계로 넘어갑니다.
+                log.update({"topic": topic, "quiz_data": quiz_df, "step": "show_explanations"})
+                st.rerun() # 페이지를 새로고침하여 해설 단계로 넘어갑니다.
 
-    # 3. 퀴즈 진행 화면
+    # 3. 해설 미리보기 화면 
+    elif log["step"] == "show_explanations":
+        st.subheader(f"📚 퀴즈 시작 전, [**{log['topic']}**] 학습하기")
+        st.markdown("퀴즈에 출제될 3가지 문제의 해설을 미리 살펴보고 시작하세요!")
+
+        # 데이터프레임의 각 행을 반복하여 해설을 표시합니다.
+        for index, row in log["quiz_data"].iterrows():
+            st.markdown(f"**해설 {index + 1}:**")
+            st.info(f"{row['explanation']}")
+        
+        st.markdown("---")
+        # 버튼을 클릭하면 다음 단계인 퀴즈 화면으로 넘어갑니다.
+        if st.button("퀴즈 풀기 시작하기", use_container_width=True, type="primary"):
+            log["step"] = "quiz"
+            st.rerun()
+
+    # 4. 퀴즈 진행 화면
     elif log["step"] == "quiz":
         index = log["quiz_index"]
         if index < len(log["quiz_data"]):
