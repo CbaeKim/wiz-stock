@@ -118,6 +118,39 @@ def get_macd(df, close_col, ma_value = [12, 26]):
 
     return (ema_1 - ema_2)
 
+def macd_diff_accel(df: pd.DataFrame,
+                    macd_col: str = "MACD",
+                    sig_col: str = "MACD_Signal",
+                    out_col: str = "MACD_Diff_Accel") -> pd.Series:
+    """
+    MACD - Signal 의 변화율(= 가속도)을 계산합니다.
+    → 직전 대비 확장/축소 속도를 나타내는 연속형 피처
+    """
+    diff = df[macd_col] - df[sig_col]
+    accel = diff.diff()
+    return pd.Series(accel, index=df.index, name=out_col)
+
+
+def macd_soft_score(df: pd.DataFrame,
+                    macd_col: str = "MACD",
+                    sig_col: str = "MACD_Signal",
+                    denom_col: str = "ATR",   # 변동성 기준 정규화
+                    scale: float = 100.0,
+                    alpha: float = 2.0,
+                    out_col: str = "MACD_Soft_-100_100") -> pd.Series:
+    """
+    Soft Score: tanh( α × (MACD - Signal)/denom ) × scale
+    - 범위: 대략 -scale ~ +scale (기본: -100 ~ 100)
+    - denom: ATR(변동성)으로 나누어 종목/가격대 차이를 정규화
+    - alpha: 민감도 조절 (값 ↑ = 더 날카롭게 반응)
+    """
+    eps = 1e-9
+    raw = alpha * ((df[macd_col] - df[sig_col]) /
+                   (df[denom_col].replace(0, np.nan) + eps))
+    score = np.tanh(raw) * scale
+    return pd.Series(score, index=df.index, name=out_col)
+
+
 def get_bollinger_bands(df, close_col, ma_value = 20, visualization = False):
     """ 
     중간 밴드 : X 기간 동안의 SMA ( = ma_value )
@@ -362,11 +395,19 @@ def get_technical_data():
     except Exception as e:
         print(f"Error Cross Signal: {e}")
 
+    # ATR (Average True Range)
+    try:
+        df['ATR'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_atr(x, high_col='High', low_col='Low', close_col='Close', window=14))
+    except Exception as e:
+        print(f"Error ATR: {e}")
+
     # MACD
     try:
         df['MACD'] = df['EMA_12'] - df['EMA_26']
         df['MACD_Signal'] = df.groupby('stock_code')['MACD'].transform(lambda x: x.ewm(span=9, adjust=False).mean())
         df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
+        df['MACD_Diff_Accel'] = macd_diff_accel(df)
+        df['MACD_Soft_-100_100'] = macd_soft_score(df, denom_col="ATR", alpha=2.0)
     except Exception as e:
         print(f"Error MACD: {e}")
 
@@ -399,12 +440,6 @@ def get_technical_data():
     except Exception as e:
         print(f"Error ADX: {e}")
 
-    # ATR (Average True Range)
-    try:
-        df['ATR'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_atr(x, high_col='High', low_col='Low', close_col='Close', window=14))
-    except Exception as e:
-        print(f"Error ATR: {e}")
-
     # OBV (On-Balance Volume)
     try:
         df['OBV'] = df.groupby('stock_code', group_keys=False).apply(lambda x: get_obv(x, close_col='Close', volume_col='Volume'))
@@ -419,6 +454,7 @@ def get_technical_data():
     change_columns = ['Open', 'High', 'Low', 'Close',
        'Dividends', 'Stock Splits', 'SMA_5', 'SMA_20', 'SMA_50', 'SMA_200',
        'EMA_12', 'EMA_26', 'MACD', 'MACD_Signal', 'MACD_Hist',
+       'MACD_Diff_Accel', 'MACD_Soft_-100_100',
        'Bollinger_Mid', 'Bollinger_Upper', 'Bollinger_Lower',
        'RSI', '%K', '%D', 'ADX', '+DI', '-DI', 'ATR']
 

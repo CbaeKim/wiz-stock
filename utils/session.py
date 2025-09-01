@@ -21,6 +21,7 @@ def initialize_session_state():
         st.session_state.ad_cooldown_active = False
     if "game_state" not in st.session_state:
         st.session_state.game_state = {
+            "view": "main",
             "step": "initial",
             "can_participate": None,
             "selected_stock_code": None,

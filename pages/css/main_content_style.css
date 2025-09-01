@@ -1,0 +1,132 @@
+/* 메인 콘텐츠 영역 스타일 (my_page_style.css와 색상 동일) */
+.content {
+    flex-grow: 1;
+    /* 남은 공간을 모두 차지하도록 함 */
+    padding: 40px;
+    background-color: #2a2a2a;
+    /* 배경색을 설정하여 흰색 공백을 제거 */
+    color: #eee;
+    min-height: 100vh;
+    /* 최소 높이를 뷰포트 전체로 설정하여 사이드바와 높이 일치 */
+
+    /* 사이드바 너비만큼 왼쪽 마진 추가 */
+    margin-left: max(20vw, 250px);
+    /* 사이드바와 동일한 너비 */
+
+    /* 컨테이너 박스 중앙 정렬을 위해 Flexbox 사용 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    overflow-y: auto;
+}
+
+/* 퀴즈 박스를 감싸는 컨테이너 스타일 */
+.content-container {
+    width: 90%;
+    /* 화면 너비에 따라 유동적으로 조절 */
+    max-width: 650px;
+    /* 최대 너비를 설정하여 너무 커지지 않도록 함 */
+    margin-top: 50px; /* 상단 마진을 50px로 설정하여 위로 올림 */
+    margin-bottom: 130px; /* 하단 마진을 50px로 설정 */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 30px;
+    background: linear-gradient(180deg, #33495e 0%, #2c3e50 100%);;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.content-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid #777;
+    padding-bottom: 20px;
+}
+
+.main-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #eee;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #ccc;
+    margin: 0;
+}
+
+/* 퀴즈 섹션 스타일 */
+.quiz-section {
+    padding: 0;
+}
+
+.quiz-title {
+    font-size: 22px;
+    color: #ddd;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-weight: normal;
+}
+
+/* 퀴즈 박스 컨테이너 */
+.quiz-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* 퀴즈 박스 스타일 */
+.quiz-box {
+    flex: 1;
+    background-color: #406283;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.quiz-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.quiz-box.checked {
+    border-color: #8f8;
+    box-shadow: 0 0 15px rgba(142, 255, 142, 0.5);
+}
+
+.box-icon {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.box-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* 퀴즈 시작 버튼 스타일 */
+.start-quiz-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    width: 100%;
+}
+
+.start-quiz-button:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
