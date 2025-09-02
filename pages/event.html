@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트 - 위즈주식</title>
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/event_style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2><a href="../index.html" class="site-title">위즈주식</a></h2>
+        <nav class="sidebar-nav">
+            <a href="../index.html">주식 교육 및 퀴즈</a>
+            <a href="./stock_prediction_game.html">주가예측게임</a>
+            <a href="./point_store.html">포인트 상점</a>
+            <a href="./event.html" class="active">이벤트</a>
+            <a href="./my_page.html">마이페이지</a>
+        </nav>
+        <button id="logout-btn" class="logout-button">로그아웃</button>
+        <section class="ranking-section">
+            <h3 class="ranking-title">🏆 실시간 보유 포인트 순위</h3>
+            <ol class="ranking-list">
+                <li class="ranking-item"><span class="ranking-number">1</span><span class="user-name">김민준</span></li>
+                <li class="ranking-item"><span class="ranking-number">2</span><span class="user-name">박서준</span></li>
+                <li class="ranking-item"><span class="ranking-number">3</span><span class="user-name">이지훈</span></li>
+                <li class="ranking-item"><span class="ranking-number">4</span><span class="user-name">최은서</span></li>
+                <li class="ranking-item"><span class="ranking-number">5</span><span class="user-name">정우진</span></li>
+            </ol>
+        </section>
+        <p class="copyright-text">Copyright 2025. kdt-team-one All rights reserved.</p>
+    </div>
+
+    <div class="content">
+        <div class="event-container">
+            <div id="event-content-wrapper">
+                <div id="main-event-list">
+                    <header class="section-header">
+                        <h2 class="section-title">포인트 획득</h2>
+                        <p class="section-subtitle">미션을 수행하고 포인트를 획득하세요!</p>
+                    </header>
+                    <div class="event-list">
+                        <a href="#" class="event-card checkin-card" data-event="dailyCheckin">
+                            <span class="card-icon">📅</span> <div class="card-info">
+                                <h3>일일 출석 체크</h3>
+                                <p>매일 출석하고 포인트 받기</p>
+                            </div>
+                        </a>
+
+                        <a href="#" class="event-card number-card" data-event="numberGame">
+                            <span class="card-icon">🔢</span> <div class="card-info">
+                                <h3>숫자 맞추기 게임</h3>
+                                <p>5번의 기회 안에 정답을 맞혀보세요!</p>
+                            </div>
+                        </a>
+
+                        <a href="#" class="event-card ad-card" data-event="adWatch">
+                            <span class="card-icon">📺</span> <div class="card-info">
+                                <h3>광고 시청하고 적립</h3>
+                                <p>재미있는 광고 보고 포인트 받기</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+
+                <div class="event-page" id="daily-checkin-page" style="display: none;">
+                    <button class="back-btn">← 뒤로가기</button>
+                    <h2 class="page-title">일일 출석 체크</h2>
+                    <div class="checkin-container">
+                        <div class="checkin-calendar" id="checkin-calendar"></div>
+                    </div>
+                </div>
+
+                <div class="event-page" id="number-game-page" style="display: none;">
+                    <button class="back-btn">← 뒤로가기</button>
+                    <h2 class="page-title">숫자 맞추기 게임</h2>
+                    <p class="game-info">1부터 100까지의 숫자를 맞춰보세요! 남은 기회: <span id="chances-left">5</span></p>
+                    <input type="number" id="number-input" class="game-input" placeholder="숫자를 입력하세요">
+                    <button id="guess-btn" class="game-btn">제출</button>
+                    <div id="game-result" class="game-result"></div>
+                </div>
+
+                <div class="event-page" id="ad-watch-page" style="display: none;">
+                    <button class="back-btn">← 뒤로가기</button>
+                    <h2 class="page-title">광고 시청하고 적립</h2>
+                    <p class="ad-info">광고를 30초 이상 시청하면 5포인트가 적립됩니다.</p>
+                    <div class="video-player">
+                        <div class="video-thumbnail" id="video-thumbnail">
+                            <div class="play-button" id="play-button">▶️</div>
+                        </div>
+                        <div class="video-overlay" id="video-overlay" style="display:none;">
+                            <span id="ad-timer">30</span>
+                            <p>초 후 포인트 적립</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/event.js"></script>
+</body>
+</html>
