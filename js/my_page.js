@@ -2,7 +2,7 @@
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
-  const API = window.API || "http://localhost:8000";
+  const API = window.API || "";
 
   // 1) 로그인 확인 & user_id 주입
   const uid = localStorage.getItem("user_id");

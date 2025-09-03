@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const API = window.API || "http://localhost:8000";
+  const API = window.API || "";
 
   // ===== 로그인 처리 =====
   const form = document.querySelector("form");
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         alert("로그인 성공!");
       }
-      location.href = "../index.html";
+      location.href = "/index.html";
 
     } catch (err) {
       console.error(err);
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 회원가입 이동
   signupBtn?.addEventListener("click", () => {
-    location.href = "./signup.html";
+    location.href = "/";
   });
 
   // ===== 로그아웃 처리 =====

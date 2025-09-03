@@ -1,7 +1,7 @@
 # uvicorn app.main:app --reload
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from pathlib import Path
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -11,6 +11,8 @@ import asyncio, subprocess
 
 # add router files
 from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 # --- 기존 함수들 (변경 없음) ---
 def get_news_datas():
@@ -58,20 +60,6 @@ async def lifespan(app: FastAPI):
 scheduler = AsyncIOScheduler()
 app = FastAPI(lifespan=lifespan)
 
-# --- CORS 미들웨어 (변경 없음) ---
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        # 개발 환경 (Live Server 등)에서 API를 호출할 수 있도록 허용하는 주소입니다.
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        # TODO: 향후 웹사이트 배포 시, 실제 서비스 도메인을 여기에 추가해야 합니다.
-        # 예: "https://www.wiz-stock.com"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # --- 라우터 포함 (변경 없음) ---
 app.include_router(login.router)
@@ -91,9 +79,11 @@ app.mount("/js", StaticFiles(directory="js"), name="js")
 app.mount("/pages", StaticFiles(directory="pages"), name="pages")
 app.mount("/images", StaticFiles(directory="images"), name="images")
 
-# 2. 루트 경로('/') 요청 처리
-@app.get("/")
-def read_root():
-    # 프로젝트 최상위 폴더에 있는 'index.html'을 반환합니다.
-    return FileResponse('./index.html')
+@app.get("/index.html", include_in_schema=False)
+def index_alias():
+    return RedirectResponse(url="/", status_code=308)
+
+@app.get("/", include_in_schema=False)
+def serve_root():
+    return FileResponse(BASE_DIR / "index.html")
 

@@ -27,10 +27,6 @@
       const cached = Number(localStorage.getItem('points'));
       window.__initialPoints__ = Number.isFinite(cached) ? cached : 0;
 
-      // API 전역 (필요 시 배포 주소로 교체)
-      window.API = "http://localhost:8000";
-      window.__API__ = window.API; // 하위 호환
-
       // DOM 준비 후 상단 칩 즉시 반영
       document.addEventListener("DOMContentLoaded", () => {
         const el = document.getElementById("points");

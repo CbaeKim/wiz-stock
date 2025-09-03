@@ -3,7 +3,7 @@ const $  = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
 /* ========== 서버 기본 주소 & 상태 ========== */
-const API_BASE = window.API || "http://localhost:8000";
+const API_BASE = window.API || "";
 const state = {
   userId: document.body.dataset.userId || "anonymous",    // <body data-user-id="...">
   points: Number(window.__initialPoints__ ?? 0),          // 시작 포인트
