@@ -1,12 +1,48 @@
-/* 주가 예측 게임 스타일 */
+/* =================================================================
+   STOCK PREDICTION - 주가 예측 게임 전용 스타일
+   ================================================================= */
 
-/* 스크롤바 스타일링 */
+/* 주가 예측 페이지 테마 색상 */
+:root {
+    --stock-bg-primary: #2a2a2a;
+    --stock-bg-secondary: #363636;
+    --stock-bg-card: #373737;
+    --stock-text: #ffffff;
+    --stock-text-muted: #ccc;
+    --stock-accent-up: #10b981;
+    --stock-accent-down: #ef4444;
+    --stock-accent-neutral: #3b82f6;
+    --stock-accent-warning: #fbbf24;
+    --stock-border: #444;
+}
+
+/* 주가 예측 페이지 배경 오버라이드 */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--stock-bg-primary);
+    color: var(--stock-text);
+    height: 100vh;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.content {
+    background-color: var(--stock-bg-primary);
+    color: var(--stock-text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 20px;
+}
+
+/* 콘텐츠 스크롤바 스타일링 */
 .content::-webkit-scrollbar {
     width: 8px;
 }
 
 .content::-webkit-scrollbar-track {
-    background: #444;
+    background: var(--stock-border);
     border-radius: 4px;
 }
 
@@ -19,34 +55,10 @@
     background: #888;
 }
 
-/* 메인 콘텐츠 영역 */
-.content {
-    margin-left: max(20vw, 250px);
-    padding: 40px;
-    background-color: #2a2a2a;
-    color: #fff;
-    min-height: 100vh;
-    height: 100vh;
-    /* 고정 높이 설정 */
-    box-sizing: border-box;
-
-    /* 스크롤 가능하도록 설정 */
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 40px;
-}
-
 /* 게임 컨테이너 */
 .game-container {
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
     padding-bottom: 60px;
-    /* 하단 여백 추가로 스크롤 공간 확보 */
 }
 
 /* 메인 메뉴 스타일 */
@@ -725,15 +737,10 @@
     transform: translateY(-2px);
 }
 
-/* 반응형 디자인 */
+/* =================================================================
+   반응형 디자인
+   ================================================================= */
 @media (max-width: 768px) {
-    .content {
-        margin-left: 0;
-        padding: 20px;
-        height: auto;
-        /* 모바일에서는 자동 높이 */
-        min-height: 100vh;
-    }
 
     .game-title {
         font-size: 2rem;

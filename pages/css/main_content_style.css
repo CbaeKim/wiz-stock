@@ -1,25 +1,14 @@
-/* 메인 콘텐츠 영역 스타일 (my_page_style.css와 색상 동일) */
+/* 메인 콘텐츠 영역 스타일 - sidebar.css 기본 설정 사용 */
 .content {
-    flex-grow: 1;
-    /* 남은 공간을 모두 차지하도록 함 */
-    padding: 40px;
+    /* sidebar.css의 기본 .content 스타일을 상속받음 */
     background-color: #2a2a2a;
-    /* 배경색을 설정하여 흰색 공백을 제거 */
     color: #eee;
-    min-height: 100vh;
-    /* 최소 높이를 뷰포트 전체로 설정하여 사이드바와 높이 일치 */
-
-    /* 사이드바 너비만큼 왼쪽 마진 추가 */
-    margin-left: max(20vw, 250px);
-    /* 사이드바와 동일한 너비 */
-
+    
     /* 컨테이너 박스 중앙 정렬을 위해 Flexbox 사용 */
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-
-    overflow-y: auto;
 }
 
 /* 퀴즈 박스를 감싸는 컨테이너 스타일 */

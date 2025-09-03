@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>포인트 상점</title>
-  <link rel="stylesheet" href="./css/sidebar.css" />
-  <link rel="stylesheet" href="./css/point_store_style.css" />
+  <link rel="stylesheet" href="/pages/css/sidebar.css" />
+  <link rel="stylesheet" href="/pages/css/point_store_style.css" />
 </head>
 
 <body>
@@ -37,13 +37,13 @@
 
   <!-- ====== 사이드바 ====== -->
   <div class="sidebar">
-    <h2><a href="../index.html" class="site-title">위즈주식</a></h2>
+    <h2><a href="/" class="site-title">위즈주식</a></h2>
     <nav class="sidebar-nav">
-      <a href="../index.html">주식 교육 및 퀴즈</a>
-      <a href="./stock_prediction_game.html">주가예측게임</a>
-      <a href="./point_store.html" class="active" aria-current="page">포인트 상점</a>
-      <a href="./event.html">이벤트</a>
-      <a href="./my_page.html">마이페이지</a>
+      <a href="/">주식 교육 및 퀴즈</a>
+      <a href="/pages/stock_prediction_game.html">주가예측게임</a>
+      <a href="/pages/point_store.html" class="active" aria-current="page">포인트 상점</a>
+      <a href="/pages/event.html">이벤트</a>
+      <a href="/pages/my_page.html">마이페이지</a>
     </nav>
     <button id="logout-btn" class="logout-button">로그아웃</button>
 
@@ -62,15 +62,19 @@
   </div>
 
   <!-- ====== 콘텐츠 영역 ====== -->
-  <header class="store__header">
-    <h1 id="page-title" class="page-title">🛒 아이템 상점</h1>
-    <div class="point-chip">보유 포인트 <strong id="points">0P</strong></div>
-  </header>
+  <div class="content">
+    <div class="store-container">
+      <header class="store__header">
+        <h1 id="page-title" class="page-title">🛒 아이템 상점</h1>
+        <div class="point-chip">보유 포인트 <strong id="points">0P</strong></div>
+      </header>
 
-  <main id="content" class="store" aria-labelledby="page-title">
-    <section class="store__notice" hidden></section>
-    <section id="storeGrid" class="store-grid"></section>
-  </main>
+      <main id="content" class="store" aria-labelledby="page-title">
+        <section class="store__notice" hidden></section>
+        <section id="storeGrid" class="store-grid"></section>
+      </main>
+    </div>
+  </div>
 
   <!-- 확인 모달 -->
   <div id="backdrop" class="modal-backdrop" hidden></div>
@@ -88,7 +92,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <!-- 스크립트: 상점 → 로그인공통(로그아웃) -->
-  <script defer src="../js/point_store.js"></script>
-  <script defer src="../js/login.js"></script>
+  <script defer src="/js/point_store.js"></script>
+  <script defer src="/js/login.js"></script>
 </body>
 </html>

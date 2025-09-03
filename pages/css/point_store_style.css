@@ -4,37 +4,51 @@
    - 다른 페이지(my_page, stock_prediction 등)와 레이아웃 통일
    ==========================================================================*/
 
-/* ===== 디자인 토큰 ===== */
+/* =================================================================
+   POINT STORE - 포인트 상점 전용 스타일
+   ================================================================= */
+
+/* 포인트 상점 테마 색상 */
 :root {
-  --bg: #0f1620;
-  --text: #e8eef7;
-  --card: #122033;
-  --line: rgba(255, 255, 255, .12);
-  --brand: #4da3ff;
-  --ok: #2ecc71;
-  --danger: #e74c3c;
-
-  --radius: 14px;
-  --gap: 16px;
-  --shadow: 0 8px 24px rgba(0, 0, 0, .35);
-
-  --sidebar-min: 250px;
-  --sidebar-w: max(20vw, var(--sidebar-min));
-
-  --font: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", Arial, sans-serif;
+  --store-bg-primary: #0f1620;
+  --store-bg-secondary: #122033;
+  --store-text: #e8eef7;
+  --store-text-muted: #b7c3d6;
+  --store-border: rgba(255, 255, 255, .12);
+  --store-accent: #4da3ff;
+  --store-success: #2ecc71;
+  --store-danger: #e74c3c;
+  
+  --store-radius: 14px;
+  --store-gap: 16px;
+  --store-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  
+  /* sidebar.css 변수들과 호환성을 위해 추가 */
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --transition-fast: 0.2s ease;
 }
 
-/* ===== 기본값 리셋 ===== */
-* { box-sizing: border-box; }
-
-html, body {
+/* 포인트 상점 페이지 배경 오버라이드 */
+body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  height: 100%;
-  line-height: 1.5;
+  background: var(--store-bg-primary);
+  color: var(--store-text);
+  height: 100vh;
+  min-height: 100vh;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Pretendard", Arial, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.content {
+  background: var(--store-bg-primary);
+  color: var(--store-text);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20px;
 }
 
 a {
@@ -44,194 +58,282 @@ a {
 
 [hidden] { display: none !important; }
 
-/* ===== 상단 헤더 ===== */
+/* 상점 컨테이너 */
+.store-container {
+  width: 100%;
+}
+
+/* 상단 헤더 */
 .store__header {
-  margin-left: var(--sidebar-w);  /* 사이드바 공간 확보 */
-  padding: 20px 40px;
-  background: #243140;
-  color: #fff;
+  padding: 20px;
+  background: var(--store-bg-secondary);
+  color: var(--store-text);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--store-border);
+  margin-bottom: 20px;
+  border-radius: var(--store-radius);
+  box-shadow: var(--shadow-light);
 }
 
 .page-title {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 1.8rem;
+  font-weight: 700;
   margin: 0;
+  color: var(--store-text);
 }
 
 .point-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: 9999px;
-  background: rgba(77, 163, 255, .12);
-  font-weight: 700;
+  padding: 10px 16px;
+  border: 1px solid var(--store-border);
+  border-radius: 25px;
+  background: rgba(77, 163, 255, .15);
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: var(--shadow-light);
 }
+
 .point-chip strong {
-  color: var(--brand);
+  color: var(--store-accent);
+  font-size: 16px;
 }
 
-/* ===== 메인 콘텐츠 ===== */
+/* 메인 콘텐츠 */
 .store {
-  margin-left: var(--sidebar-w);  /* 사이드바 공간 확보 */
-  padding: 40px;
-  background-color: #2a2a2a;
-  color: #fff;
-  min-height: 100vh;
-  box-sizing: border-box;
+  padding: 0;
+  background-color: transparent;
+  color: var(--store-text);
 }
 
-/* ===== 그리드 ===== */
+/* 상품 그리드 */
 .store-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--store-gap);
 }
 
-/* ===== 카드 ===== */
+/* 상품 카드 */
 .store-card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 12px;
-  gap: 10px;
-  box-shadow: var(--shadow);
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  border: 1px solid var(--store-border);
+  background: var(--store-bg-secondary);
+  border-radius: var(--store-radius);
+  padding: 20px;
+  gap: 15px;
+  box-shadow: var(--store-shadow);
+  transition: all var(--transition-fast);
 }
+
 .store-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(77, 163, 255, .35);
+  transform: translateY(-5px);
+  border-color: var(--store-accent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .4);
 }
 
 .store-card__thumb {
   aspect-ratio: 16 / 10;
   border-radius: 10px;
-  background: #0e1a2a;
+  background: linear-gradient(135deg, #0e1a2a 0%, #1a2332 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  border: 1px dashed var(--line);
+  font-size: 32px;
+  border: 2px dashed var(--store-border);
   overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.store-card:hover .store-card__thumb {
+  border-color: var(--store-accent);
+  background: linear-gradient(135deg, #1a2332 0%, #243140 100%);
 }
 
 .store-card__title {
   margin: 0;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
+  color: var(--store-text);
 }
+
 .store-card__desc {
   margin: 0;
-  font-size: .95rem;
-  color: #b7c3d6;
-  line-height: 1.4;
+  font-size: 1rem;
+  color: var(--store-text-muted);
+  line-height: 1.5;
 }
+
 .store-card__meta {
   margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .price-badge {
-  padding: 8px 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, .04);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--store-border);
+  background: rgba(77, 163, 255, .1);
+  color: var(--store-accent);
   font-weight: 700;
+  font-size: 14px;
 }
 
-/* ===== 버튼 ===== */
+/* 버튼 스타일 */
 .btn {
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, .04);
-  color: var(--text);
-  padding: 10px 14px;
-  border-radius: 12px;
+  border: 1px solid var(--store-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--store-text);
+  padding: 12px 16px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 800;
-  transition: transform .05s ease, background .15s ease, border-color .15s ease;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
-.btn:hover { background: rgba(255, 255, 255, .08); }
-.btn:active { transform: translateY(1px) scale(.99); }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn:hover { 
+  background: rgba(255, 255, 255, .1);
+  transform: translateY(-1px);
+}
+
+.btn:active { 
+  transform: translateY(0) scale(.98); 
+}
+
+.btn:disabled { 
+  opacity: .5; 
+  cursor: not-allowed;
+  transform: none;
+}
 
 .btn--primary {
   border-color: transparent;
-  background: var(--brand);
-  color: #081421;
+  background: linear-gradient(135deg, var(--store-accent) 0%, #3b82f6 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.btn--primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn:focus-visible {
-  outline: 2px solid #7cc0ff;
+  outline: 2px solid var(--store-accent);
   outline-offset: 2px;
 }
 
-/* ===== 모달 ===== */
+/* 모달 */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .5);
-  backdrop-filter: blur(2px);
-  z-index: 40;
+  background: rgba(0, 0, 0, .6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
 }
+
 .modal {
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   width: min(520px, calc(100vw - 32px));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  box-shadow: var(--shadow);
-  padding: 18px;
+  border: 1px solid var(--store-border);
+  border-radius: var(--store-radius);
+  background: var(--store-bg-secondary);
+  box-shadow: var(--store-shadow);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  z-index: 50;
-}
-.modal .title { font-weight: 800; font-size: 1.1rem; margin: 0; }
-.modal .desc { color: #b7c3d6; margin: 0; }
-.modal__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  gap: 16px;
+  z-index: 1001;
 }
 
-/* ===== 토스트 ===== */
+.modal .title { 
+  font-weight: 700; 
+  font-size: 1.3rem; 
+  margin: 0;
+  color: var(--store-text);
+}
+
+.modal .desc { 
+  color: var(--store-text-muted); 
+  margin: 0;
+  line-height: 1.5;
+}
+
+.modal__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* 토스트 알림 */
 .toast {
   position: fixed;
   right: 20px;
   top: 20px;
-  z-index: 60;
+  z-index: 1002;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  box-shadow: var(--shadow);
-  min-width: 220px;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--store-radius);
+  border: 1px solid var(--store-border);
+  background: var(--store-bg-secondary);
+  box-shadow: var(--store-shadow);
+  min-width: 280px;
+  color: var(--store-text);
+  font-weight: 500;
 }
-.toast--ok { border-left: 4px solid var(--ok); }
-.toast--danger { border-left: 4px solid var(--danger); }
 
-/* ===== 반응형 ===== */
-@media (max-width: 900px) {
-  .store__header,
-  .store {
-    margin-left: 0; /* 모바일에서는 사이드바 위에 겹치지 않게 */
+.toast--ok { 
+  border-left: 4px solid var(--store-success);
+  background: linear-gradient(135deg, var(--store-bg-secondary) 0%, rgba(46, 204, 113, 0.1) 100%);
+}
+
+.toast--danger { 
+  border-left: 4px solid var(--store-danger);
+  background: linear-gradient(135deg, var(--store-bg-secondary) 0%, rgba(231, 76, 60, 0.1) 100%);
+}
+
+/* =================================================================
+   반응형 디자인
+   ================================================================= */
+@media (max-width: 768px) {
+  .store-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .store__header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .store-card {
+    padding: 16px;
+  }
+  
+  .modal {
+    width: calc(100vw - 24px);
     padding: 20px;
+  }
+  
+  .toast {
+    right: 12px;
+    top: 12px;
+    min-width: 250px;
   }
 }
 
