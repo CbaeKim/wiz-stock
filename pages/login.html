@@ -23,7 +23,7 @@
             <div class="input-group password-group">
                 <label for="password">비밀번호</label>
                 <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
-                <img src="../images/icon_close_eye.png" alt="비밀번호 숨기기" class="eye-icon" onclick="togglePassword()">
+                <img src="../images/icon_close_eye.png" alt="비밀번호 숨기기" class="eye-icon">
             </div>
 
             <div class="button-group">
@@ -33,6 +33,7 @@
         </form>
     </div>
 
+    <!-- login.js로 옮김 
     <script>
         function togglePassword() {
             const passwordField = document.getElementById('password');
@@ -49,6 +50,10 @@
             }
         }
     </script>
+    -->
+
+<script>window.API="http://localhost:8000";</script>
+<script src="../js/login.js" defer></script>
 
 </body>
 </html>

@@ -1,5 +1,6 @@
 # uvicorn app.main:app --reload
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from contextlib import asynccontextmanager
@@ -62,8 +63,21 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
 
 
-app = FastAPI(lifespan = lifespan)  # Definition FastAPI Object
 scheduler = AsyncIOScheduler()      # Definition Scheduler object
+app = FastAPI(lifespan = lifespan)  # Definition FastAPI Object
+
+# 프론트엔드 서버, 백엔드 서버 연결
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        # "https://myfrontend.com" (배포 시 서비스하는 프론트엔드 서버)
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(login.router)            # 로그인 관련 기능
 app.include_router(quiz.router)             # quiz 관련 기능

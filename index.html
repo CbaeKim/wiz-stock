@@ -74,7 +74,22 @@
             </section>
         </div>
     </div>
-    // '퀴즈 시작하기' 버튼 실행 시 관련 UI 출력 및 로직은 quiz.js 참조
+    <!--'퀴즈 시작하기' 버튼 실행 시 관련 UI 출력 및 로직은 quiz.js 참조 -->
     <script src="./js/quiz.js"></script>
+
+<!--로그인 정보가 없으면 로그인 페이지로 이동 -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      window.location.href = "./pages/login.html";
+    }
+  });
+</script>
+
+<script src="../js/stock_prediction.js"></script>
+<script>window.API="http://localhost:8000";</script>
+<script src="./js/login.js" defer></script>
+
 </body>
 </html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>포인트 상점</title>
+  <link rel="stylesheet" href="./css/sidebar.css" />
+  <link rel="stylesheet" href="./css/point_store_style.css" />
+</head>
+
+<body>
+  <!-- 로그인/초기화: user_id, 초기 포인트, API 베이스 설정 -->
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const uid = params.get('uid') || localStorage.getItem('user_id');
+      if (!uid) {
+        alert("로그인이 필요합니다.");
+        location.href = "./login.html";
+        return;
+      }
+
+      // 페이지 전역 주입
+      document.body.dataset.userId = uid;
+
+      // 초기 포인트(캐시) → 서버 동기화 전 깜빡임 방지
+      const cached = Number(localStorage.getItem('points'));
+      window.__initialPoints__ = Number.isFinite(cached) ? cached : 0;
+
+      // API 전역 (필요 시 배포 주소로 교체)
+      window.API = "http://localhost:8000";
+      window.__API__ = window.API; // 하위 호환
+
+      // DOM 준비 후 상단 칩 즉시 반영
+      document.addEventListener("DOMContentLoaded", () => {
+        const el = document.getElementById("points");
+        if (el) el.textContent = `${window.__initialPoints__}P`;
+      });
+    })();
+  </script>
+
+  <!-- ====== 사이드바 ====== -->
+  <div class="sidebar">
+    <h2><a href="../index.html" class="site-title">위즈주식</a></h2>
+    <nav class="sidebar-nav">
+      <a href="../index.html">주식 교육 및 퀴즈</a>
+      <a href="./stock_prediction_game.html">주가예측게임</a>
+      <a href="./point_store.html" class="active" aria-current="page">포인트 상점</a>
+      <a href="./event.html">이벤트</a>
+      <a href="./my_page.html">마이페이지</a>
+    </nav>
+    <button id="logout-btn" class="logout-button">로그아웃</button>
+
+    <section class="ranking-section">
+      <h3 class="ranking-title">🏆 실시간 보유 포인트 순위</h3>
+      <ol class="ranking-list">
+        <li class="ranking-item"><span class="ranking-number">1</span><span class="user-name">김민준</span></li>
+        <li class="ranking-item"><span class="ranking-number">2</span><span class="user-name">박서준</span></li>
+        <li class="ranking-item"><span class="ranking-number">3</span><span class="user-name">이지훈</span></li>
+        <li class="ranking-item"><span class="ranking-number">4</span><span class="user-name">최은서</span></li>
+        <li class="ranking-item"><span class="ranking-number">5</span><span class="user-name">정우진</span></li>
+      </ol>
+    </section>
+
+    <p class="copyright-text">Copyright 2025. kdt-team-one All rights reserved.</p>
+  </div>
+
+  <!-- ====== 콘텐츠 영역 ====== -->
+  <header class="store__header">
+    <h1 id="page-title" class="page-title">🛒 아이템 상점</h1>
+    <div class="point-chip">보유 포인트 <strong id="points">0P</strong></div>
+  </header>
+
+  <main id="content" class="store" aria-labelledby="page-title">
+    <section class="store__notice" hidden></section>
+    <section id="storeGrid" class="store-grid"></section>
+  </main>
+
+  <!-- 확인 모달 -->
+  <div id="backdrop" class="modal-backdrop" hidden></div>
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true"
+       aria-labelledby="modal-title" aria-describedby="modal-desc" tabindex="-1">
+    <div class="title" id="modal-title">구매 확인</div>
+    <div class="desc" id="modal-desc">상품 정보를 불러오는 중...</div>
+    <div class="modal__actions">
+      <button id="buyConfirm" class="btn btn--primary">예, 구매할게요 ✅</button>
+      <button id="buyCancel" class="btn" value="cancel">취소</button>
+    </div>
+  </div>
+
+  <!-- 토스트 -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- 스크립트: 상점 → 로그인공통(로그아웃) -->
+  <script defer src="../js/point_store.js"></script>
+  <script defer src="../js/login.js"></script>
+</body>
+</html>

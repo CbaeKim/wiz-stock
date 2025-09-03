@@ -1,0 +1,237 @@
+/* =========================================================================
+   point_store_style.css (포인트 상점 전용 스타일)
+   - 사이드바를 fixed로 두고 본문에 margin-left로 공간 확보
+   - 다른 페이지(my_page, stock_prediction 등)와 레이아웃 통일
+   ==========================================================================*/
+
+/* ===== 디자인 토큰 ===== */
+:root {
+  --bg: #0f1620;
+  --text: #e8eef7;
+  --card: #122033;
+  --line: rgba(255, 255, 255, .12);
+  --brand: #4da3ff;
+  --ok: #2ecc71;
+  --danger: #e74c3c;
+
+  --radius: 14px;
+  --gap: 16px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, .35);
+
+  --sidebar-min: 250px;
+  --sidebar-w: max(20vw, var(--sidebar-min));
+
+  --font: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", Arial, sans-serif;
+}
+
+/* ===== 기본값 리셋 ===== */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  height: 100%;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+[hidden] { display: none !important; }
+
+/* ===== 상단 헤더 ===== */
+.store__header {
+  margin-left: var(--sidebar-w);  /* 사이드바 공간 확보 */
+  padding: 20px 40px;
+  background: #243140;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.point-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  background: rgba(77, 163, 255, .12);
+  font-weight: 700;
+}
+.point-chip strong {
+  color: var(--brand);
+}
+
+/* ===== 메인 콘텐츠 ===== */
+.store {
+  margin-left: var(--sidebar-w);  /* 사이드바 공간 확보 */
+  padding: 40px;
+  background-color: #2a2a2a;
+  color: #fff;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* ===== 그리드 ===== */
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap);
+}
+
+/* ===== 카드 ===== */
+.store-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.store-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(77, 163, 255, .35);
+}
+
+.store-card__thumb {
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  background: #0e1a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  border: 1px dashed var(--line);
+  overflow: hidden;
+}
+
+.store-card__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.store-card__desc {
+  margin: 0;
+  font-size: .95rem;
+  color: #b7c3d6;
+  line-height: 1.4;
+}
+.store-card__meta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.price-badge {
+  padding: 8px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .04);
+  font-weight: 700;
+}
+
+/* ===== 버튼 ===== */
+.btn {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform .05s ease, background .15s ease, border-color .15s ease;
+}
+.btn:hover { background: rgba(255, 255, 255, .08); }
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn--primary {
+  border-color: transparent;
+  background: var(--brand);
+  color: #081421;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #7cc0ff;
+  outline-offset: 2px;
+}
+
+/* ===== 모달 ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+}
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 50;
+}
+.modal .title { font-weight: 800; font-size: 1.1rem; margin: 0; }
+.modal .desc { color: #b7c3d6; margin: 0; }
+.modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ===== 토스트 ===== */
+.toast {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  min-width: 220px;
+}
+.toast--ok { border-left: 4px solid var(--ok); }
+.toast--danger { border-left: 4px solid var(--danger); }
+
+/* ===== 반응형 ===== */
+@media (max-width: 900px) {
+  .store__header,
+  .store {
+    margin-left: 0; /* 모바일에서는 사이드바 위에 겹치지 않게 */
+    padding: 20px;
+  }
+}
+
