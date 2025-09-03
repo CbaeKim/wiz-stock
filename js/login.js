@@ -78,15 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("nickname");
-      alert("로그아웃 되었습니다.");
+      // 로그아웃 확인
+      if (confirm("정말 로그아웃 하시겠습니까?")) {
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("nickname");
+        localStorage.removeItem("points"); // 포인트 캐시도 제거
+        alert("로그아웃 되었습니다.");
 
-      // 현재 경로에 따라 로그인 페이지 경로 분기
-      const loginPath = location.pathname.includes("/pages/")
-        ? "../pages/login.html"  // /pages/* 안쪽에서
-        : "./pages/login.html";  // 루트(index.html)에서
-      location.href = loginPath;
+        // 로그인 페이지로 리다이렉트 (절대 경로 사용)
+        location.href = "/pages/login.html";
+      }
     });
   }
 });
