@@ -1,6 +1,8 @@
 # uvicorn app.main:app --reload
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from contextlib import asynccontextmanager
@@ -87,6 +89,10 @@ app.include_router(point.router)
 app.include_router(shop_router.router)
 app.include_router(pred_stock.router)
 
+app.mount("/js", StaticFiles(directory="js"), name="js")
+app.mount("/pages", StaticFiles(directory="pages"), name="pages")
+app.mount("/images", StaticFiles(directory="images"), name="images")
+
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return FileResponse('./index.html')
