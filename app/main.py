@@ -12,41 +12,33 @@ import asyncio, subprocess
 # add router files
 from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock
 
+# --- 기존 함수들 (변경 없음) ---
 def get_news_datas():
     """ A function to run when the server starts """
     print("[Function: get_news_datas] Start News data mining & Sentimental analysis")
-
     subprocess.run(['python', './data/DataPipeline.py'])
-
     print("Process Complete.")
 
 def run_predict_modeling():
     """Function to run PredictModel.py"""
     print("[Function: run_predict_modeling] Start predictive modeling process.")
-    
     subprocess.run(['python', './data/PredictModel.py'])
-    
     print("Predictive Modeling Complete.")
 
 def run_auto_grading():
     """Function to run GradePredictions.py for automatic grading"""
     print("[Function: run_auto_grading] Start automatic grading process.")
-    
     subprocess.run(['python', './data/GradePredictions.py'])
-    
     print("Automatic Grading Complete.")
 
 def reset_day_process():
     """ Function to reset participation values """
     print("[Function: reset_day_process] Start")
-
     update_data = {
         'quiz_participation': False,
         'predict_game_participation': False
     }
-    
     supabase = connect_supabase()
-    
     response = supabase.table('user_info').update(update_data).not_.is_('id', None).execute()
     return print("[Function: reset_day_process] Success")
 
@@ -59,40 +51,49 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(run_auto_grading, CronTrigger(hour = 16, minute = 30 ))   # PM 4:30
     scheduler.add_job(get_news_datas, CronTrigger(hour = 18, minute = 0))      # PM 6:00
     scheduler.add_job(reset_day_process, CronTrigger(hour = 0, minute = 0))    # AM 12:00
-
     scheduler.start()
     yield
     scheduler.shutdown()
 
+scheduler = AsyncIOScheduler()
+app = FastAPI(lifespan=lifespan)
 
-scheduler = AsyncIOScheduler()      # Definition Scheduler object
-app = FastAPI(lifespan = lifespan)  # Definition FastAPI Object
-
-# 프론트엔드 서버, 백엔드 서버 연결
+# --- CORS 미들웨어 (변경 없음) ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # 개발 환경 (Live Server 등)에서 API를 호출할 수 있도록 허용하는 주소입니다.
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        # "https://myfrontend.com" (배포 시 서비스하는 프론트엔드 서버)
+        # TODO: 향후 웹사이트 배포 시, 실제 서비스 도메인을 여기에 추가해야 합니다.
+        # 예: "https://www.wiz-stock.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(login.router)            # 로그인 관련 기능
-app.include_router(quiz.router)             # quiz 관련 기능
-app.include_router(mypage_router.router)    # mypage 관련 기능'
+# --- 라우터 포함 (변경 없음) ---
+app.include_router(login.router)
+app.include_router(quiz.router)
+app.include_router(mypage_router.router)
 app.include_router(sign_up.router)
 app.include_router(point.router)
 app.include_router(shop_router.router)
 app.include_router(pred_stock.router)
 
+
+# --- ✨✨✨ 이 부분이 중요합니다 ✨✨✨ ---
+
+# 1. 정적 파일 폴더 마운트
+# /js URL을 실제 js 폴더에, /pages URL을 실제 pages 폴더에 연결합니다.
 app.mount("/js", StaticFiles(directory="js"), name="js")
 app.mount("/pages", StaticFiles(directory="pages"), name="pages")
 app.mount("/images", StaticFiles(directory="images"), name="images")
 
+# 2. 루트 경로('/') 요청 처리
 @app.get("/")
 def read_root():
+    # 프로젝트 최상위 폴더에 있는 'index.html'을 반환합니다.
     return FileResponse('./index.html')
+

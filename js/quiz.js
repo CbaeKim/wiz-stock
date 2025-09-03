@@ -1,145 +1,278 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM 요소 ---
     const mainContentContainer = document.getElementById('main-content-container');
-    const startQuizButton = document.querySelector('.start-quiz-button');
-    const quizBoxes = document.querySelectorAll('.quiz-box');
 
+    // --- 상태 변수 ---
+    let quizData = [];
     let currentQuestionIndex = 0;
-    let correctAnswersCount = 0;
-    let selectedQuizType = '';
+    let totalPoints = 0;
+    let selectedTopic = '';
+    
+    // --- 로그인 연동 ---
+    // 세션 스토리지에서 'user_id' 값을 가져옵니다.
+    // 만약 로그인 페이지를 거치지 않아 값이 없다면, 테스트를 위해 임시 ID를 사용합니다.
+    const userId = sessionStorage.getItem('user_id') || 'gildong_hong@gmail.com'; 
+    console.log(`현재 사용자 ID: ${userId}`); // 개발자 도구 콘솔에서 확인용
 
-    // 초기 선택된 퀴즈 타입 설정 (기본적으로 checked 클래스가 있는 박스)
-    const initialSelectedBox = document.querySelector('.quiz-box.checked');
-    if (initialSelectedBox) {
-        selectedQuizType = initialSelectedBox.getAttribute('data-quiz-type');
-        console.log('초기 선택된 퀴즈 타입:', selectedQuizType);
+    /**
+     * 페이지를 초기화하고 사용자의 참여 상태를 확인합니다.
+     */
+    async function initializePage() {
+        showLoading('참여 가능 여부를 확인 중입니다...');
+        try {
+            const canParticipate = await checkParticipationStatus();
+            if (canParticipate) {
+                // 퀴즈 참여가 가능하면 초기 화면을 렌더링합니다.
+                renderInitialScreen();
+            } else {
+                // 이미 참여했다면 참여 완료 메시지를 보여줍니다.
+                showParticipationMessage();
+            }
+        } catch (error) {
+            console.error('Participation check failed:', error);
+            showError('참여 여부를 확인하는 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+        }
     }
 
-    // 퀴즈 데이터 예시 (문제 3개로 구성)
-    const quizData = {
-        basic: [
-            { question: "주식 시장에서 '매도'는 무엇을 의미하나요?", options: ["주식을 사는 것", "주식을 파는 것", "주식을 보유하는 것"], answer: "주식을 파는 것" },
-            { question: "코스피 지수는 무엇을 나타내나요?", options: ["한국 거래소의 모든 기업", "유가증권 시장의 대표 기업", "코스닥 시장의 대표 기업"], answer: "유가증권 시장의 대표 기업" },
-            { question: "주식의 '액면가'는 무엇인가요?", options: ["주식의 실제 시장 가격", "기업이 처음 주식을 발행할 때 정한 가격", "주식의 평균 가격"], answer: "기업이 처음 주식을 발행할 때 정한 가격" }
-        ],
-        technical: [
-            { question: "기술적 지표 중 '이동평균선'은 무엇을 나타내나요?", options: ["주가의 평균", "거래량의 평균", "시가총액의 평균"], answer: "주가의 평균" },
-            { question: "RSI 지표가 70 이상일 때, 일반적으로 어떤 상태를 의미하나요?", options: ["과매수", "과매도", "정상 범위"], answer: "과매수" },
-            { question: "볼린저 밴드의 상단선은 무엇을 의미하나요?", options: ["주가가 고평가된 상태", "주가가 저평가된 상태", "주가의 변동성이 낮은 상태"], answer: "주가가 고평가된 상태" }
-        ],
-        financial: [
-            { question: "재무제표 중 '손익계산서'는 무엇을 보여주나요?", options: ["기업의 자산, 부채, 자본", "기업의 일정 기간 동안의 경영 성과", "기업의 현금 흐름"], answer: "기업의 일정 기간 동안의 경영 성과" },
-            { question: "'부채비율'은 무엇을 나타내는 지표인가요?", options: ["기업이 자본에 비해 부채가 얼마나 많은지", "기업이 현금 흐름을 얼마나 잘 관리하는지", "기업의 수익성"], answer: "기업이 자본에 비해 부채가 얼마나 많은지" },
-            { question: "'영업이익'은 무엇을 의미하나요?", options: ["총수익에서 모든 비용을 뺀 금액", "총수익에서 판매비와 관리비를 뺀 금액", "모든 비용을 제외한 순수 이익"], answer: "총수익에서 판매비와 관리비를 뺀 금액" }
-        ]
-    };
+    /**
+     * API를 호출하여 사용자의 퀴즈 참여 가능 여부를 확인합니다.
+     * @returns {Promise<boolean>} 참여 가능하면 true, 아니면 false
+     */
+    async function checkParticipationStatus() {
+        // API 경로를 절대 경로 ('/')로 시작하도록 수정
+        const response = await fetch(`/quiz/check-participation?user_id=${userId}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.warn(`User '${userId}' not found. Assuming new user.`);
+                return true;
+            }
+            throw new Error(`Server error: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.can_participate;
+    }
 
-    // 퀴즈 박스 선택 로직
-    quizBoxes.forEach(box => {
-        box.addEventListener('click', () => {
-            quizBoxes.forEach(item => {
-                item.classList.remove('checked');
-            });
-            box.classList.add('checked');
-
-            // 선택된 퀴즈 타입 저장
-            selectedQuizType = box.getAttribute('data-quiz-type');
-            console.log('선택된 퀴즈 타입:', selectedQuizType); // 디버깅용
-        });
-    });
-
-    // 퀴즈 페이지 렌더링 함수
-    function renderQuiz(quiz) {
+    /**
+     * 퀴즈 주제를 선택하는 초기 화면을 렌더링합니다.
+     */
+    function renderInitialScreen() {
         mainContentContainer.innerHTML = `
-            <div class="quiz-page">
-                <h1 class="main-title">${currentQuestionIndex + 1}번째 퀴즈</h1>
-                <p class="subtitle">총 3문제 중 ${currentQuestionIndex + 1}번째 문제입니다.</p>
-                <div class="question-box">
-                    <p class="question-text">${quiz.question}</p>
-                    <div class="answer-options">
-                        ${quiz.options.map(option => `<button class="answer-option">${option}</button>`).join('')}
+            <header class="content-header">
+                <h1 class="main-title">오늘의 주식 퀴즈</h1>
+                <p class="subtitle">매일 새로운 퀴즈를 풀고 포인트를 얻어보세요!</p>
+            </header>
+            <div id="participation-message-container" class="participation-message" style="display: none;">
+                🎉 오늘의 퀴즈에 이미 참여하셨습니다. 내일 다시 도전해주세요!
+            </div>
+            <section class="quiz-section">
+                <h2 class="quiz-title">오늘 공부할 주제를 선택하세요 (1일 1회)</h2>
+                <div class="quiz-container">
+                    <div class="quiz-box checked" data-topic-kr="기초지식">
+                        <span class="box-icon">💡</span>
+                        <span class="box-text">기초지식</span>
+                    </div>
+                    <div class="quiz-box" data-topic-kr="기술적 지표">
+                        <span class="box-icon">📈</span>
+                        <span class="box-text">기술적 지표</span>
+                    </div>
+                    <div class="quiz-box" data-topic-kr="재무제표">
+                        <span class="box-icon">📊</span>
+                        <span class="box-text">재무제표</span>
                     </div>
                 </div>
-                <button class="next-quiz-button" style="display:none;">다음 문제</button>
-            </div>
+                <button class="start-quiz-button">퀴즈 시작하기</button>
+            </section>
         `;
-
-        // 답변 선택 이벤트 리스너 추가
-        const answerButtons = document.querySelectorAll('.answer-option');
-        const nextButton = document.querySelector('.next-quiz-button');
-
-        answerButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                const selectedAnswer = event.target.textContent;
-                const isCorrect = (selectedAnswer === quiz.answer);
-
-                // 모든 버튼의 선택 스타일 제거 및 비활성화
-                answerButtons.forEach(btn => {
-                    btn.classList.remove('selected');
-                    btn.disabled = true; // 중복 클릭 방지
-                });
-
-                // 정답/오답에 따라 스타일 변경
-                if (isCorrect) {
-                    event.target.classList.add('correct');
-                    correctAnswersCount++;
-                } else {
-                    event.target.classList.add('wrong');
-                    // 정답 버튼 표시
-                    const correctAnswerBtn = Array.from(answerButtons).find(btn => btn.textContent === quiz.answer);
-                    if (correctAnswerBtn) {
-                        correctAnswerBtn.classList.add('correct');
-                    }
-                }
-
-                // '다음 문제' 버튼 표시
-                nextButton.style.display = 'block';
-            });
-        });
-
-        // '다음 문제' 버튼 클릭 이벤트
-        nextButton.addEventListener('click', () => {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < 3) {
-                renderQuiz(quizData[selectedQuizType][currentQuestionIndex]);
-            } else {
-                renderResultPage();
-            }
-        });
     }
 
-    // 결과 페이지 렌더링 함수
+    /**
+     * 이미 퀴즈에 참여한 사용자에게 메시지를 보여주고 UI를 비활성화합니다.
+     */
+    function showParticipationMessage() {
+        renderInitialScreen(); // 기본 UI를 먼저 그리고
+        const quizSection = mainContentContainer.querySelector('.quiz-section');
+        const messageContainer = mainContentContainer.querySelector('#participation-message-container');
+
+        if (quizSection) {
+            // 퀴즈 선택 영역을 비활성화 처리합니다.
+            quizSection.querySelectorAll('.quiz-box, .start-quiz-button').forEach(el => {
+                el.style.pointerEvents = 'none';
+                el.style.opacity = '0.5';
+            });
+        }
+        if (messageContainer) {
+            messageContainer.style.display = 'block'; // 참여 완료 메시지를 보여줍니다.
+        }
+    }
+
+    // --- 이벤트 위임: 동적으로 생성되는 요소들의 이벤트를 처리합니다. ---
+    mainContentContainer.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target.closest('.start-quiz-button')) handleStartQuiz();
+        else if (target.closest('.quiz-box')) handleTopicSelection(target.closest('.quiz-box'));
+        else if (target.closest('.start-solving-button')) renderQuizPage();
+        else if (target.closest('.ox-button')) handleAnswerSubmit(target.closest('.ox-button').dataset.answer);
+        else if (target.closest('.next-quiz-button')) handleNextQuestion();
+        else if (target.closest('.restart-quiz-button')) window.location.reload();
+    });
+
+    /** 퀴즈 주제 선택을 처리합니다. */
+    function handleTopicSelection(selectedBox) {
+        mainContentContainer.querySelectorAll('.quiz-box').forEach(box => box.classList.remove('checked'));
+        selectedBox.classList.add('checked');
+    }
+
+    /** '퀴즈 시작하기' 버튼 클릭을 처리하고, 퀴즈 데이터를 가져옵니다. */
+    async function handleStartQuiz() {
+        const selectedBox = mainContentContainer.querySelector('.quiz-box.checked');
+        if (!selectedBox) {
+            alert('먼저 공부할 주제를 선택해주세요.');
+            return;
+        }
+        selectedTopic = selectedBox.dataset.topicKr;
+        
+        showLoading('퀴즈를 불러오는 중입니다...');
+        try {
+            // API 경로를 절대 경로 ('/')로 시작하도록 수정
+            const response = await fetch(`/quiz/get-by-topic?topic=${encodeURIComponent(selectedTopic)}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            quizData = await response.json();
+            if (quizData && quizData.length > 0) {
+                renderExplanationsPage();
+            } else {
+                showError('해당 주제의 퀴즈를 불러올 수 없습니다.');
+            }
+        } catch (error) {
+            console.error('Failed to load quiz data:', error);
+            showError('퀴즈 데이터를 불러오는 중 오류가 발생했습니다.');
+        }
+    }
+    
+    /** 퀴즈 시작 전 해설 페이지를 렌더링합니다. */
+    function renderExplanationsPage() {
+        const explanationsHtml = quizData.map((quiz, index) => `
+            <div class="explanation-item">
+                <p class="explanation-title"><strong>해설 ${index + 1}</strong></p>
+                <p class="explanation-text">${quiz.explanation}</p>
+            </div>`).join('');
+
+        mainContentContainer.innerHTML = `
+            <div class="explanations-page">
+                <h1 class="main-title">📚 [${selectedTopic}] 미리 학습하기</h1>
+                <p class="subtitle">퀴즈에 출제될 ${quizData.length}문제의 해설을 미리 확인하세요.</p>
+                <div class="explanations-container">${explanationsHtml}</div>
+                <button class="start-solving-button">학습 완료! 퀴즈 풀기</button>
+            </div>`;
+    }
+
+    /** 현재 문제 페이지를 렌더링합니다. */
+    function renderQuizPage() {
+        const quiz = quizData[currentQuestionIndex];
+        mainContentContainer.innerHTML = `
+            <div class="quiz-page">
+                <p class="quiz-progress">총 ${quizData.length}문제 중 ${currentQuestionIndex + 1}번째</p>
+                <h1 class="quiz-question-title">Q. ${quiz.question}</h1>
+                <div class="quiz-card">
+                    <div class="ox-options">
+                        <button class="ox-button" data-answer="O">O</button>
+                        <button class="ox-button" data-answer="X">X</button>
+                    </div>
+                </div>
+                <div class="feedback-container"></div>
+            </div>`;
+    }
+
+    /** 사용자 답변을 서버로 제출하고 결과를 처리합니다. */
+    async function handleAnswerSubmit(userAnswer) {
+        mainContentContainer.querySelectorAll('.ox-button').forEach(btn => btn.disabled = true);
+        
+        const quiz = quizData[currentQuestionIndex];
+        const payload = {
+            user_id: userId,
+            quiz_id: quiz.identify_code,
+            user_answer: userAnswer,
+            topic: selectedTopic,
+            quiz_index: currentQuestionIndex,
+            total_questions: quizData.length,
+        };
+
+        try {
+            // API 경로를 절대 경로 ('/')로 시작하도록 수정
+            const response = await fetch('/quiz/submit-answer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error('답변 제출에 실패했습니다.');
+            
+            const result = await response.json();
+            totalPoints += result.points_awarded;
+            showFeedback(result.is_correct, result.points_awarded, quiz.explanation, userAnswer);
+        } catch (error) {
+            console.error('Answer submission error:', error);
+            showError('답변 처리 중 오류가 발생했습니다. 다시 시도해주세요.', true);
+        }
+    }
+    
+    /** 정답/오답 피드백을 화면에 보여줍니다. */
+    function showFeedback(isCorrect, points, explanation, userAnswer) {
+        const feedbackContainer = mainContentContainer.querySelector('.feedback-container');
+        const selectedBtn = mainContentContainer.querySelector(`.ox-button[data-answer="${userAnswer}"]`);
+        
+        const feedbackClass = isCorrect ? 'correct' : 'wrong';
+        const feedbackMessage = isCorrect
+            ? `👍 정답입니다! (+${points}포인트)`
+            : `👎 아쉽네요! 정답은 '${quizData[currentQuestionIndex].answer}' 입니다. (+${points}포인트)`;
+
+        if(selectedBtn) selectedBtn.classList.add(feedbackClass);
+
+        const nextButtonText = (currentQuestionIndex === quizData.length - 1) ? '결과 보기' : '다음 문제';
+        feedbackContainer.innerHTML = `
+            <div class="feedback-message ${feedbackClass}">${feedbackMessage}</div>
+            <div class="explanation-item feedback-explanation">
+                <p class="explanation-title"><strong>상세 해설</strong></p>
+                <p class="explanation-text">${explanation}</p>
+            </div>
+            <button class="next-quiz-button">${nextButtonText}</button>`;
+    }
+
+    /** 다음 문제로 넘어가거나 결과 페이지를 보여줍니다. */
+    function handleNextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            renderQuizPage();
+        } else {
+            renderResultPage();
+        }
+    }
+
+    /** 최종 결과 페이지를 렌더링합니다. */
     function renderResultPage() {
         mainContentContainer.innerHTML = `
             <div class="result-page">
-                <h1 class="main-title">퀴즈 완료!</h1>
-                <p class="subtitle">총 3문제 중 **${correctAnswersCount}문제**를 맞혔습니다.</p>
-                <button class="restart-quiz-button">다시 시작하기</button>
-            </div>
-        `;
-
-        const restartButton = document.querySelector('.restart-quiz-button');
-        restartButton.addEventListener('click', () => {
-            location.reload(); // 페이지 새로고침하여 초기 상태로 복귀
-        });
+                <h1 class="main-title">🎉 퀴즈 완료!</h1>
+                <p class="subtitle">오늘의 주식 퀴즈 학습을 마쳤습니다.</p>
+                <div class="result-summary">
+                    <p>오늘 획득한 총 포인트</p>
+                    <p class="total-points">${totalPoints} P</p>
+                </div>
+                <button class="restart-quiz-button">메인으로 돌아가기</button>
+            </div>`;
+    }
+    
+    /** 로딩 중임을 나타내는 UI를 보여줍니다. */
+    function showLoading(message) {
+        mainContentContainer.innerHTML = `<div class="loading-container"><div class="loading-spinner"></div><p>${message}</p></div>`;
     }
 
-    // '퀴즈 시작하기' 버튼 클릭 이벤트
-    startQuizButton.addEventListener('click', () => {
-        const selectedBox = document.querySelector('.quiz-box.checked');
-        if (selectedBox) {
-            selectedQuizType = selectedBox.getAttribute('data-quiz-type');
-            console.log('퀴즈 시작 - 선택된 타입:', selectedQuizType); // 디버깅용
-            console.log('퀴즈 데이터:', quizData[selectedQuizType]); // 디버깅용
+    /** 오류 메시지를 보여줍니다. */
+    function showError(message, showRetryButton = false) {
+        const retryButtonHtml = showRetryButton ? `<button class="restart-quiz-button" onclick="window.location.reload()">다시 시도</button>` : '';
+        mainContentContainer.innerHTML = `<div class="error-container"><p>${message}</p>${retryButtonHtml}</div>`;
+    }
 
-            if (quizData[selectedQuizType] && quizData[selectedQuizType].length > 0) {
-                currentQuestionIndex = 0;
-                correctAnswersCount = 0;
-                renderQuiz(quizData[selectedQuizType][currentQuestionIndex]);
-            } else {
-                alert('해당 주제의 퀴즈 데이터가 없습니다.');
-            }
-        } else {
-            alert('먼저 공부할 주제를 선택해주세요.');
-        }
-    });
+    // --- 페이지 로드 시점의 시작점 ---
+    initializePage();
 });
+

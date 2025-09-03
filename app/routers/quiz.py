@@ -5,7 +5,9 @@ from datetime import datetime
 import random
 import traceback
 
-from app.dependency.connect_supabase import connect_supabase
+# app.dependency.connect_supabase 경로는 프로젝트 구조에 맞게 확인이 필요합니다.
+# 이 파일이 app/routers/ 에 있다면 아래 경로가 맞습니다.
+from ..dependency.connect_supabase import connect_supabase
 
 # --- 라우터 설정 ---
 router = APIRouter(
@@ -27,18 +29,23 @@ class AnswerRequest(BaseModel):
 def check_participation(user_id: str, db: Client = Depends(connect_supabase)):
     """
     사용자가 오늘 퀴즈에 참여했는지 여부를 확인합니다.
+    사용자를 찾을 수 없는 경우(신규 사용자), 참여 가능한 것으로 간주합니다.
     """
     try:
         user_info_res = db.table('user_info').select('quiz_participation').eq('id', user_id).execute()
+        
+        # ✨✨✨ 사용자 예외 처리 추가 ✨✨✨
+        # DB에 해당 user_id가 없는 경우, 신규 사용자로 판단하여 참여 가능으로 응답합니다.
         if not user_info_res.data:
-            raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
+            # raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
+            return {"can_participate": True}
         
         has_participated = user_info_res.data[0].get('quiz_participation', False)
         return {"can_participate": not has_participated}
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="서버 오류: 참여 여부 확인에 실패했습니다.")
-# ---------------------------------
+        # 오류 발생 시 클라이언트가 문제를 인지할 수 있도록 500 에러를 반환합니다.
+        raise HTTPException(status_code=500, detail=f"서버 오류: 참여 여부 확인에 실패했습니다. {e}")
 
 @router.get("/get-by-topic", summary="주제별 퀴즈 가져오기")
 def get_quizzes(topic: str, db: Client = Depends(connect_supabase)):
@@ -46,13 +53,29 @@ def get_quizzes(topic: str, db: Client = Depends(connect_supabase)):
     쿼리 파라미터로 받은 주제(topic)에 해당하는 퀴즈를 DB에서 3개 랜덤으로 가져옵니다.
     """
     try:
+        # --- ✨✨✨ 디버깅을 위한 print문 추가 ✨✨✨ ---
+        print("\n" + "="*50)
+        print(f"--- 퀴즈 데이터 요청: sub_category = '{topic}' ---")
+
         response = db.table('quiz').select("identify_code, question, answer, explanation").eq('sub_category', topic).execute()
+        
+        # --- ✨✨✨ 디버깅을 위한 print문 추가 ✨✨✨ ---
+        print(f"Supabase에서 가져온 데이터 개수: {len(response.data) if response.data else 0} 개")
+        print("="*50 + "\n")
+
         if not response.data:
+            # 데이터가 없을 경우, 404 에러를 발생시킵니다.
+            # Supabase 테이블의 sub_category 컬럼에 '{topic}' 데이터가 있는지 확인해주세요.
             raise HTTPException(status_code=404, detail="해당 주제의 퀴즈가 없습니다.")
-        return random.sample(response.data, 3)
-    except Exception:
+        
+        # ✨✨✨ 데이터가 3개 미만일 경우를 대비한 예외 처리 추가 ✨✨✨
+        # random.sample은 데이터 개수보다 많은 샘플을 뽑으려고 하면 오류를 발생시킵니다.
+        num_samples_to_draw = min(len(response.data), 3)
+        return random.sample(response.data, num_samples_to_draw)
+
+    except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="서버 오류: 퀴즈 데이터를 가져오는 데 실패했습니다.")
+        raise HTTPException(status_code=500, detail=f"서버 오류: 퀴즈 데이터를 가져오는 데 실패했습니다. {e}")
 
 @router.post("/submit-answer", summary="퀴즈 답변 제출 및 채점")
 def submit_answer(req_body: AnswerRequest, request: Request, db: Client = Depends(connect_supabase)):
@@ -62,6 +85,8 @@ def submit_answer(req_body: AnswerRequest, request: Request, db: Client = Depend
     try:
         # 1. 정답 확인 및 포인트 계산
         quiz_info_res = db.table('quiz').select('answer').eq('identify_code', req_body.quiz_id).single().execute()
+        if not quiz_info_res.data:
+             raise HTTPException(status_code=404, detail="퀴즈 정보를 찾을 수 없습니다.")
         correct_answer = quiz_info_res.data['answer']
         is_correct = (req_body.user_answer == correct_answer)
         points_to_add = 5 if is_correct else 2
@@ -102,6 +127,6 @@ def submit_answer(req_body: AnswerRequest, request: Request, db: Client = Depend
             db.table('user_info').update({'quiz_participation': True}).eq('id', req_body.user_id).execute()
         
         return {"is_correct": is_correct, "points_awarded": points_to_add}
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="서버 오류: 답변을 처리하는 데 실패했습니다.")
+        raise HTTPException(status_code=500, detail=f"서버 오류: 답변을 처리하는 데 실패했습니다. {e}")
