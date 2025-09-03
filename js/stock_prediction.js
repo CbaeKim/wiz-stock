@@ -8,11 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewHistoryBtn = document.getElementById('view-history');
     const backFromHistoryBtn = document.getElementById('back-from-history');
     const backFromGameBtn = document.getElementById('back-from-game');
+    // 테스트 버튼들 제거됨
     
     // DOM 요소들 - 게임
     const predictionButtons = document.querySelectorAll('.prediction-btn');
     const submitBtn = document.getElementById('submit-prediction');
-    const resetBtn = document.getElementById('reset-game');
+    // const resetBtn = document.getElementById('reset-game'); // 제거됨
     const resultSection = document.getElementById('result-section');
     const userTextarea = document.getElementById('user-prediction');
     
@@ -21,53 +22,60 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameSubmitted = false;
     let aiPredictionData = null;
     
-    // 예측 기록 저장소 (실제로는 서버나 로컬스토리지 사용)
-    let predictionHistory = [
-        {
-            date: '2025-01-20',
-            prediction: 'up',
-            reasoning: '긍정적인 실적 발표 예상',
-            aiPrediction: 'up',
-            result: 'correct'
-        },
-        {
-            date: '2025-01-19',
-            prediction: 'down',
-            reasoning: '시장 불안정성 증가',
-            aiPrediction: 'up',
-            result: 'incorrect'
-        },
-        {
-            date: '2025-01-18',
-            prediction: 'up',
-            reasoning: '기술적 지표 상승 신호',
-            aiPrediction: 'up',
-            result: 'correct'
-        },
-        {
-            date: '2025-01-17',
-            prediction: 'up',
-            reasoning: '반도체 업황 개선',
-            aiPrediction: 'down',
-            result: 'correct'
-        },
-        {
-            date: '2025-01-16',
-            prediction: 'down',
-            reasoning: '글로벌 경기 둔화 우려',
-            aiPrediction: 'down',
-            result: 'correct'
-        }
-    ];
+    // 예측 기록 데이터
+    let predictionHistoryData = null;
     
     // 메뉴 네비게이션 이벤트
     startPredictionBtn.addEventListener('click', () => {
         showPredictionGame();
     });
     
-    viewHistoryBtn.addEventListener('click', () => {
+    viewHistoryBtn.addEventListener('click', async () => {
+        await loadPredictionHistory();
         showHistoryView();
     });
+    
+    // 테스트 함수들 제거됨
+    
+    // 포인트 수령 함수
+    async function claimPoints(predictionId, buttonElement) {
+        try {
+            console.log('포인트 수령 시작:', predictionId);
+            
+            const response = await fetch('/stock-predict/claim-points', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prediction_id: predictionId
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || '포인트 수령에 실패했습니다.');
+            }
+            
+            const result = await response.json();
+            console.log('포인트 수령 성공:', result);
+            
+            // 버튼을 수령 완료 상태로 변경
+            const pointsSection = buttonElement.parentElement;
+            pointsSection.className = 'points-section received';
+            pointsSection.innerHTML = `
+                <span class="points-text">포인트 수령 완료: ${result.points_awarded}점</span>
+            `;
+            
+            alert(`${result.message}\n총 포인트: ${result.total_points}점`);
+            
+        } catch (error) {
+            console.error('포인트 수령 실패:', error);
+            alert(`포인트 수령 실패: ${error.message}`);
+        }
+    }
+    
+    // 테스트 함수들 및 window 객체 할당 제거됨
     
     backFromHistoryBtn.addEventListener('click', () => {
         showMainMenu();
@@ -76,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     backFromGameBtn.addEventListener('click', () => {
         showMainMenu();
     });
+    
+    // 테스트 버튼 이벤트 리스너들 제거됨
     
     // 화면 전환 함수들
     function showMainMenu() {
@@ -91,49 +101,140 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHistoryView();
     }
     
-    function showPredictionGame() {
+    async function showPredictionGame() {
         mainMenu.style.display = 'none';
         historyView.style.display = 'none';
         predictionGame.style.display = 'block';
-        generateAIPrediction();
+        await loadGameData();
     }
     
+    // 예측 기록 API 호출
+    async function loadPredictionHistory() {
+        try {
+            // 로컬스토리지에서 사용자 ID 가져오기 (로그인 시스템과 연동)
+            const userId = localStorage.getItem('user_id') || 'test_user';
+            console.log('사용자 ID:', userId);
+            
+            const url = `/stock-predict/get-history?user_id=${userId}`;
+            console.log('API 호출 URL:', url);
+            
+            const response = await fetch(url);
+            console.log('응답 상태:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API 에러 응답:', errorText);
+                throw new Error(`예측 기록을 가져오는데 실패했습니다. 상태: ${response.status}`);
+            }
+            
+            predictionHistoryData = await response.json();
+            console.log('예측 기록 로드 완료:', predictionHistoryData);
+        } catch (error) {
+            console.error('예측 기록 로드 실패:', error);
+            alert(`예측 기록 로드 실패: ${error.message}`);
+            // 에러 시 기본 데이터 사용
+            predictionHistoryData = {
+                total_predictions: 0,
+                correct_predictions: 0,
+                accuracy_rate: 0,
+                history: []
+            };
+        }
+    }
+
     // 예측 기록 렌더링
     function renderHistoryView() {
-        const totalPredictions = predictionHistory.length;
-        const correctPredictions = predictionHistory.filter(item => item.result === 'correct').length;
-        const accuracyRate = Math.round((correctPredictions / totalPredictions) * 100);
+        if (!predictionHistoryData) {
+            console.error('예측 기록 데이터가 없습니다.');
+            return;
+        }
         
         // 통계 업데이트
-        document.getElementById('total-predictions').textContent = totalPredictions;
-        document.getElementById('accuracy-rate').textContent = `${accuracyRate}%`;
-        document.getElementById('correct-predictions').textContent = correctPredictions;
+        document.getElementById('total-predictions').textContent = predictionHistoryData.total_predictions;
+        document.getElementById('accuracy-rate').textContent = `${predictionHistoryData.accuracy_rate}%`;
+        document.getElementById('correct-predictions').textContent = predictionHistoryData.correct_predictions;
         
         // 기록 목록 렌더링
         const historyItemsContainer = document.getElementById('history-items');
         historyItemsContainer.innerHTML = '';
         
-        predictionHistory.forEach(item => {
+        if (predictionHistoryData.history.length === 0) {
+            historyItemsContainer.innerHTML = `
+                <div class="no-history">
+                    <p>아직 예측 기록이 없습니다.</p>
+                    <p>주가 예측 게임에 참여해보세요!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        predictionHistoryData.history.forEach(item => {
             const historyItem = document.createElement('div');
-            historyItem.className = `history-item ${item.result}`;
+            
+            // 날짜 포맷팅
+            const predictionDate = new Date(item.prediction_date).toLocaleDateString('ko-KR');
+            
+            // 결과 상태 결정
+            let resultStatus = 'pending';
+            let resultText = '결과 대기중';
+            let pointsSection = '';
+            
+            if (item.is_checked) {
+                resultStatus = item.is_correct ? 'correct' : 'incorrect';
+                resultText = item.is_correct ? '✓ 정답' : '✗ 오답';
+                
+                // 포인트 관련 섹션
+                if (item.points_awarded !== null && item.points_awarded !== undefined) {
+                    // 이미 포인트를 받은 경우
+                    pointsSection = `
+                        <div class="points-section received">
+                            <span class="points-text">포인트 수령 완료: ${item.points_awarded}점</span>
+                        </div>
+                    `;
+                } else {
+                    // 포인트를 아직 받지 않은 경우
+                    const expectedPoints = item.is_correct ? 10 : 5;
+                    pointsSection = `
+                        <div class="points-section">
+                            <span class="points-text">획득 가능 포인트: ${expectedPoints}점</span>
+                            <button class="claim-points-btn" data-prediction-id="${item.id}">
+                                포인트 받기
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+            
+            historyItem.className = `history-item ${resultStatus}`;
             
             historyItem.innerHTML = `
                 <div class="history-item-header">
-                    <span class="history-date">${item.date}</span>
-                    <span class="history-result ${item.result}">
-                        ${item.result === 'correct' ? '✓ 정답' : '✗ 오답'}
+                    <span class="history-date">${predictionDate}</span>
+                    <span class="history-result ${resultStatus}">
+                        ${resultText}
                     </span>
                 </div>
+                <div class="history-stock">
+                    종목: ${item.stock_name} (${item.stock_code})
+                </div>
                 <div class="history-prediction">
-                    예측: ${item.prediction === 'up' ? '📈 상승' : '📉 하락'}
-                    ${item.aiPrediction !== item.prediction ? '(AI와 다른 예측)' : '(AI와 동일한 예측)'}
+                    예측: ${item.predicted_trend === '상승' || item.predicted_trend === 'up' ? '📈 상승' : '📉 하락'}
                 </div>
                 <div class="history-reasoning">
                     "${item.reasoning || '예측 근거 없음'}"
                 </div>
+                ${pointsSection}
             `;
             
             historyItemsContainer.appendChild(historyItem);
+        });
+        
+        // 포인트 받기 버튼 이벤트 리스너 추가
+        document.querySelectorAll('.claim-points-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const predictionId = e.target.getAttribute('data-prediction-id');
+                await claimPoints(predictionId, e.target);
+            });
         });
     }
     
@@ -169,81 +270,142 @@ document.addEventListener('DOMContentLoaded', () => {
         submitPrediction();
     });
     
-    // 다시 예측하기 버튼 클릭 이벤트
-    resetBtn.addEventListener('click', () => {
-        resetGame();
-    });
+    // 다시 예측하기 버튼 제거됨
     
     // 예측 제출 함수
-    function submitPrediction() {
-        gameSubmitted = true;
-        
-        // 버튼들 비활성화
-        predictionButtons.forEach(btn => {
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.7';
-        });
-        
-        submitBtn.disabled = true;
-        submitBtn.textContent = '제출 완료';
-        
-        // 사용자 입력 비활성화
-        userTextarea.disabled = true;
-        
-        // 사용자 결과 생성 및 표시
-        generateUserResult();
-        
-        // 결과 섹션 표시
-        resultSection.style.display = 'block';
-        resetBtn.style.display = 'inline-block';
-        
-        // 결과 섹션으로 스크롤
-        setTimeout(() => {
-            resultSection.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
+    async function submitPrediction() {
+        try {
+            // 사용자 ID 가져오기
+            const userId = localStorage.getItem('user_id') || 'test_user';
+            const reasoning = userTextarea.value.trim();
+            
+            // API 호출하여 예측 제출
+            const response = await fetch('/stock-predict/submit-prediction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    stock_code: '005930', // 삼성전자 고정
+                    user_predict_trend: selectedPrediction,
+                    reasoning: reasoning
+                })
             });
-        }, 300);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || '예측 제출에 실패했습니다.');
+            }
+            
+            const result = await response.json();
+            console.log('예측 제출 성공:', result);
+            
+            gameSubmitted = true;
+            
+            // 버튼들 비활성화
+            predictionButtons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.7';
+            });
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '제출 완료';
+            
+            // 사용자 입력 비활성화
+            userTextarea.disabled = true;
+            
+            // 사용자 결과 생성 및 표시
+            generateUserResult();
+            
+            // 결과 섹션 표시
+            resultSection.style.display = 'block';
+            
+            // 결과 섹션으로 스크롤
+            setTimeout(() => {
+                resultSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 300);
+            
+        } catch (error) {
+            console.error('예측 제출 실패:', error);
+            alert(error.message);
+        }
     }
     
-    // AI 예측 정보 생성 함수
-    function generateAIPrediction() {
-        const currentPrice = 62000;
+    // 게임 데이터 로드 함수
+    async function loadGameData() {
+        try {
+            const userId = localStorage.getItem('user_id') || 'test_user';
+            console.log('게임 데이터 로드 시작...');
+            
+            const response = await fetch(`/stock-predict/get-game-data?user_id=${userId}`);
+            
+            if (!response.ok) {
+                throw new Error(`게임 데이터 로드 실패: ${response.status}`);
+            }
+            
+            const gameData = await response.json();
+            console.log('게임 데이터 로드 완료:', gameData);
+            
+            // 참여 가능 여부 확인
+            if (!gameData.can_participate) {
+                alert('오늘은 이미 게임에 참여하셨습니다. 내일 다시 참여해주세요!');
+                showMainMenu();
+                return;
+            }
+            
+            // UI 업데이트
+            updateGameUI(gameData);
+            
+        } catch (error) {
+            console.error('게임 데이터 로드 실패:', error);
+            alert(`게임 데이터 로드 실패: ${error.message}`);
+            showMainMenu();
+        }
+    }
+    
+    // 게임 UI 업데이트 함수
+    function updateGameUI(gameData) {
+        const { stock_info, ai_prediction, sentiment_analysis } = gameData;
         
-        // 랜덤 뉴스 감성 분석 결과
-        const sentiments = ['긍정적 전망', '부정적 전망', '중립적 전망', '혼재된 전망'];
-        const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+        // 현재가 업데이트
+        document.getElementById('current-price').textContent = `${stock_info.current_price.toLocaleString()}원`;
         
-        // AI 예측가 계산 (현재가 기준 ±500원 범위)
-        const aiVariation = Math.floor(Math.random() * 1000) - 500; // -500 ~ +500
-        const aiPredictedPrice = currentPrice + aiVariation;
+        // 감성분석 결과 업데이트
+        document.getElementById('news-sentiment').textContent = sentiment_analysis.outlook;
         
-        // AI 예측 방향 결정
-        const aiDirection = aiPredictedPrice > currentPrice ? 'up' : 'down';
+        // AI 예측 정보 업데이트
+        document.getElementById('ai-prev-price').textContent = `${stock_info.current_price.toLocaleString()}원`;
         
-        aiPredictionData = {
-            sentiment: randomSentiment,
-            prevPrice: currentPrice,
-            predictedPrice: aiPredictedPrice,
-            direction: aiDirection
-        };
-        
-        // UI 업데이트
-        document.getElementById('news-sentiment').textContent = randomSentiment;
-        document.getElementById('ai-prev-price').textContent = `${currentPrice.toLocaleString()}원`;
-        document.getElementById('ai-today-price').textContent = `${aiPredictedPrice.toLocaleString()}원`;
-        
-        // AI 예측가 색상 설정
-        const aiTodayElement = document.getElementById('ai-today-price');
-        if (aiPredictedPrice > currentPrice) {
-            aiTodayElement.style.color = '#10b981'; // 상승 - 초록색
-        } else if (aiPredictedPrice < currentPrice) {
-            aiTodayElement.style.color = '#ef4444'; // 하락 - 빨간색
+        if (ai_prediction.price_predict) {
+            document.getElementById('ai-today-price').textContent = `${ai_prediction.price_predict.toLocaleString()}원`;
+            
+            // AI 예측가 색상 설정
+            const aiTodayElement = document.getElementById('ai-today-price');
+            if (ai_prediction.price_predict > stock_info.current_price) {
+                aiTodayElement.style.color = '#10b981'; // 상승 - 초록색
+            } else if (ai_prediction.price_predict < stock_info.current_price) {
+                aiTodayElement.style.color = '#ef4444'; // 하락 - 빨간색
+            } else {
+                aiTodayElement.style.color = '#fbbf24'; // 동일 - 노란색
+            }
         } else {
-            aiTodayElement.style.color = '#fbbf24'; // 동일 - 노란색
+            document.getElementById('ai-today-price').textContent = '예측 데이터 없음';
         }
         
-        console.log('AI 예측 생성:', aiPredictionData);
+        // AI 예측 데이터 저장 (결과 비교용)
+        aiPredictionData = {
+            sentiment: sentiment_analysis.outlook,
+            prevPrice: stock_info.current_price,
+            predictedPrice: ai_prediction.price_predict || stock_info.current_price,
+            direction: ai_prediction.trend_predict === '상승' ? 'up' : 'down',
+            topFeature: ai_prediction.top_feature
+        };
+        
+        console.log('게임 UI 업데이트 완료:', aiPredictionData);
     }
     
     // 사용자 결과 생성 함수
@@ -280,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 게임 리셋 함수
-    function resetGame() {
+    async function resetGame() {
         // 상태 초기화
         selectedPrediction = null;
         gameSubmitted = false;
@@ -302,10 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 결과 섹션 숨기기
         resultSection.style.display = 'none';
-        resetBtn.style.display = 'none';
         
-        // 새로운 AI 예측 생성
-        generateAIPrediction();
+        // 새로운 게임 데이터 로드
+        await loadGameData();
         
         // 상단으로 스크롤
         document.querySelector('.game-header').scrollIntoView({ 

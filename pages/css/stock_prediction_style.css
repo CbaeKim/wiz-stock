@@ -289,6 +289,78 @@
     font-style: italic;
 }
 
+.history-stock {
+    font-size: 0.95rem;
+    color: #e0e7ff;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.history-result.pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.no-history {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+}
+
+.no-history p {
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.no-history p:first-child {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #d1d5db;
+}
+
+.points-section {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.points-section.received {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.points-text {
+    font-size: 0.9rem;
+    color: #e0e7ff;
+    font-weight: 500;
+}
+
+.points-section.received .points-text {
+    color: #10b981;
+}
+
+.claim-points-btn {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.claim-points-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+}
+
 /* 게임 헤더 */
 .game-header {
     text-align: center;
