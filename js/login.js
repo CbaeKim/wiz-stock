@@ -52,14 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const nData = await nRes.json();
 
-      localStorage.setItem("user_id", username);
+      localStorage.setItem(window.CONFIG?.STORAGE_KEYS?.USER_ID || "user_id", username);
       if (nRes.ok && nData?.user_name) {
-        localStorage.setItem("nickname", nData.user_name);
+        localStorage.setItem(window.CONFIG?.STORAGE_KEYS?.NICKNAME || "nickname", nData.user_name);
         alert(`${nData.user_name}님, 환영합니다!`);
       } else {
         alert("로그인 성공!");
       }
-      location.href = "/index.html";
+      location.href = window.CONFIG?.PAGES?.HOME || "/index.html";
 
     } catch (err) {
       console.error(err);
@@ -80,13 +80,13 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.addEventListener("click", () => {
       // 로그아웃 확인
       if (confirm("정말 로그아웃 하시겠습니까?")) {
-        localStorage.removeItem("user_id");
-        localStorage.removeItem("nickname");
-        localStorage.removeItem("points"); // 포인트 캐시도 제거
+        localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.USER_ID || "user_id");
+        localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.NICKNAME || "nickname");
+        localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.POINTS || "points"); // 포인트 캐시도 제거
         alert("로그아웃 되었습니다.");
 
         // 로그인 페이지로 리다이렉트 (절대 경로 사용)
-        location.href = "/pages/login.html";
+        location.href = window.CONFIG?.PAGES?.LOGIN || "/pages/login.html";
       }
     });
   }

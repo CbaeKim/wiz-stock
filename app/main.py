@@ -10,7 +10,7 @@ from app.dependency.connect_supabase import connect_supabase
 import asyncio, subprocess
 
 # add router files
-from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock
+from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock, ranking
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -69,6 +69,7 @@ app.include_router(sign_up.router)
 app.include_router(point.router)
 app.include_router(shop_router.router)
 app.include_router(pred_stock.router)
+app.include_router(ranking.router)
 
 
 # 1. 정적 파일 폴더 마운트
