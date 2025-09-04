@@ -11,7 +11,7 @@ class SessionManager {
         this.warningTimeoutId = null;
         this.lastActivityTime = Date.now();
         this.isWarningShown = false;
-        
+
         this.init();
     }
 
@@ -23,10 +23,10 @@ class SessionManager {
 
         // 활동 감지 이벤트 등록
         this.registerActivityEvents();
-        
+
         // 타이머 시작
         this.resetTimer();
-        
+
         console.log('[SessionManager] 세션 관리 시작 - 30분 후 자동 로그아웃');
     }
 
@@ -38,7 +38,7 @@ class SessionManager {
     registerActivityEvents() {
         // 사용자 활동을 감지할 이벤트들
         const events = [
-            'mousedown', 'mousemove', 'keypress', 'scroll', 
+            'mousedown', 'mousemove', 'keypress', 'scroll',
             'touchstart', 'click', 'focus', 'blur'
         ];
 
@@ -58,12 +58,12 @@ class SessionManager {
 
     onActivity() {
         this.lastActivityTime = Date.now();
-        
+
         // 경고가 표시된 상태라면 숨기기
         if (this.isWarningShown) {
             this.hideWarning();
         }
-        
+
         // 타이머 리셋
         this.resetTimer();
     }
@@ -90,13 +90,13 @@ class SessionManager {
 
     showWarning() {
         if (this.isWarningShown) return;
-        
+
         this.isWarningShown = true;
-        
+
         // 경고 모달 생성
         const modal = this.createWarningModal();
         document.body.appendChild(modal);
-        
+
         console.log('[SessionManager] 5분 후 자동 로그아웃 경고 표시');
     }
 
@@ -188,10 +188,10 @@ class SessionManager {
 
     autoLogout() {
         console.log('[SessionManager] 30분 비활성으로 자동 로그아웃 실행');
-        
+
         // 경고 모달이 있다면 제거
         this.hideWarning();
-        
+
         // 로그아웃 실행
         this.logout('자동 로그아웃되었습니다.\n30분간 활동이 없어 보안을 위해 로그아웃됩니다.');
     }
@@ -201,7 +201,7 @@ class SessionManager {
         localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.USER_ID || 'user_id');
         localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.NICKNAME || 'nickname');
         localStorage.removeItem(window.CONFIG?.STORAGE_KEYS?.POINTS || 'points');
-        
+
         // 타이머 정리
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
@@ -209,10 +209,10 @@ class SessionManager {
         if (this.warningTimeoutId) {
             clearTimeout(this.warningTimeoutId);
         }
-        
+
         // 사용자에게 알림
         alert(message);
-        
+
         // 로그인 페이지로 리다이렉트
         window.location.href = window.CONFIG?.PAGES?.LOGIN || '/pages/login.html';
     }
@@ -222,7 +222,7 @@ class SessionManager {
         const now = Date.now();
         const timeSinceLastActivity = now - this.lastActivityTime;
         const timeUntilLogout = this.TIMEOUT_DURATION - timeSinceLastActivity;
-        
+
         return {
             lastActivity: new Date(this.lastActivityTime).toLocaleString(),
             timeSinceLastActivity: Math.floor(timeSinceLastActivity / 1000) + '초',
@@ -238,11 +238,11 @@ window.sessionManager = null;
 // DOM 로드 완료 후 세션 매니저 초기화
 document.addEventListener('DOMContentLoaded', () => {
     // 로그인 페이지에서는 세션 매니저를 실행하지 않음
-    if (window.location.pathname.includes('login.html') || 
+    if (window.location.pathname.includes('login.html') ||
         window.location.pathname.includes('sign_up.html')) {
         return;
     }
-    
+
     window.sessionManager = new SessionManager();
 });
 
