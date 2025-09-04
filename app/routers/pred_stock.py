@@ -30,16 +30,17 @@ class ClaimPointsRequest(BaseModel):
 async def check_participation(user_id: str, db: Client = Depends(connect_supabase)):
     """
     사용자가 오늘 주가 예측 게임에 참여했는지 여부를 확인
+    오늘 날짜 기준으로 predict_game 테이블에서 직접 확인
     """
     try:
-        user_info_res = db.table('user_info').select('predict_game_participation').eq('id', user_id).execute()
-    
-        if not user_info_res.data:
-            return {"can_participate": False}
+        today = datetime.now().date().isoformat()
         
-        has_participated = user_info_res.data[0].get('predict_game_participation', False)
+        # 오늘 날짜로 이미 예측한 기록이 있는지 확인
+        prediction_res = db.table('predict_game').select('id').eq('user_id', user_id).eq('prediction_date', today).execute()
         
-        return {"can_participate": not has_participated}
+        has_participated_today = len(prediction_res.data) > 0
+        
+        return {"can_participate": not has_participated_today}
     except Exception:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="서버 오류: 참여 여부 확인에 실패했습니다.")
@@ -110,9 +111,10 @@ async def get_game_data(user_id: str, db: Client = Depends(connect_supabase)):
             technical_res = db.table('technical_data').select('Close, Date').eq('stock_code', stock_code).order('Date', desc=True).limit(1).execute()
             current_price_data = technical_res.data[0] if technical_res.data else None
         
-        # 3. AI 최신 예측 데이터
-        predict_res = db.table('predict_modeling').select('price_predict, trend_predict, predict_date, top_feature').eq('stock_code', stock_code).order('predict_date', desc=True).limit(1).execute()
+        # 3. AI 최신 예측 데이터 및 이전 예측가
+        predict_res = db.table('predict_modeling').select('price_predict, trend_predict, predict_date, top_feature').eq('stock_code', stock_code).order('predict_date', desc=True).limit(2).execute()
         ai_prediction = predict_res.data[0] if predict_res.data else None
+        prev_ai_prediction = predict_res.data[1] if len(predict_res.data) > 1 else None
         
         # 4. 감성분석 데이터 (최신)
         sentiment_res = db.table('sentimental_score').select('date, score, label').eq('stock_code', stock_code).order('date', desc=True).limit(1).execute()
@@ -155,8 +157,10 @@ async def get_game_data(user_id: str, db: Client = Depends(connect_supabase)):
             },
             "ai_prediction": {
                 "price_predict": ai_prediction["price_predict"] if ai_prediction else None,
+                "prev_price_predict": prev_ai_prediction["price_predict"] if prev_ai_prediction else None,
                 "trend_predict": ai_trend_outlook,
                 "predict_date": ai_prediction["predict_date"] if ai_prediction else None,
+                "prev_predict_date": prev_ai_prediction["predict_date"] if prev_ai_prediction else None,
                 "top_feature": ai_prediction["top_feature"] if ai_prediction else "데이터 없음"
             },
             "sentiment_analysis": {
@@ -233,10 +237,7 @@ async def submit_prediction(req_body: StockPredictionRequest, request: Request, 
             "actual_price": None
         }).execute()
         
-        # 사용자 참여 상태 업데이트
-        db.table("user_info").update({
-            'predict_game_participation': True
-        }).eq("id", req_body.user_id).execute()
+        # 참여 상태는 predict_game 테이블의 날짜 기반으로 관리되므로 별도 업데이트 불필요
         
         # 서비스 로그 기록
         reasoning_text = req_body.reasoning if req_body.reasoning else "근거 없음"

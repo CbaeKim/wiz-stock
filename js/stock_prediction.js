@@ -377,8 +377,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 감성분석 결과 업데이트
         document.getElementById('news-sentiment').textContent = sentiment_analysis.outlook;
         
-        // AI 예측 정보 업데이트
-        document.getElementById('ai-prev-price').textContent = `${stock_info.current_price.toLocaleString()}원`;
+        // AI 예측 정보 업데이트 - 이전 예측가
+        if (ai_prediction.prev_price_predict) {
+            document.getElementById('ai-prev-price').textContent = `${ai_prediction.prev_price_predict.toLocaleString()}원`;
+        } else {
+            document.getElementById('ai-prev-price').textContent = '이전 예측 데이터 없음';
+        }
         
         if (ai_prediction.price_predict) {
             document.getElementById('ai-today-price').textContent = `${ai_prediction.price_predict.toLocaleString()}원`;
