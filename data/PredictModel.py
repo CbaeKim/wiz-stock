@@ -123,8 +123,8 @@ def run_predictive_modeling():
         predicted_scaled_price = model.predict(X_predict, verbose=0)
         predicted_price_float = scalers['Close'].inverse_transform(predicted_scaled_price)[0, 0]
         
-        # 최종 예측가를 소수점 첫째 자리에서 반올림하여 정수로 변환
-        predicted_price = int(round(predicted_price_float))
+        # 최종 예측가를 100 단위로 반올림
+        predicted_price = int(round(predicted_price_float , -2))
         
         # 등락 판단
         last_real_price = feature_df['Close'].iloc[-1]
