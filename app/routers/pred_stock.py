@@ -342,6 +342,89 @@ async def get_history(user_id: str, db: Client = Depends(connect_supabase)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"서버 오류: 예측 기록을 가져오는 데 실패했습니다. {str(e)}")
 
+@router.post("/grade-predictions", summary="예측 결과 자동 채점 (관리자용)")
+async def grade_predictions_api(db: Client = Depends(connect_supabase)):
+    """
+    관리자용: 예측 결과를 자동으로 채점합니다.
+    매일 장 마감 후 실행하여 어제의 예측 결과를 체크합니다.
+    """
+    try:
+        # GradePredictions.py의 로직을 여기에 구현
+        import sys
+        from pathlib import Path
+        import pandas as pd
+        
+        # 프로젝트 루트 경로 설정
+        current_path = Path(__file__).resolve()
+        project_root = current_path.parent.parent.parent
+        
+        # stock_data.csv 파일 로드
+        csv_path = project_root / "cache" / "stock_data.csv"
+        if not csv_path.exists():
+            raise HTTPException(status_code=404, detail="stock_data.csv 파일을 찾을 수 없습니다.")
+        
+        stock_df = pd.read_csv(csv_path, dtype={'stock_code': str})
+        stock_df['Date'] = pd.to_datetime(stock_df['Date']).dt.date
+        
+        # 어제의 채점되지 않은 예측들 조회
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        
+        response = db.table('predict_game').select('*') \
+            .gte('prediction_date', yesterday.isoformat()) \
+            .lt('prediction_date', today.isoformat()) \
+            .eq('is_checked', False) \
+            .execute()
+        
+        pending_predictions = response.data
+        if not pending_predictions:
+            return {"message": "채점할 예측이 없습니다.", "graded_count": 0}
+        
+        # 실제 등락 정보 추출
+        actual_trends = {}
+        unique_stock_codes = list(set(p['stock_code'] for p in pending_predictions))
+        
+        for stock_code in unique_stock_codes:
+            code_df = stock_df[stock_df['stock_code'] == stock_code]
+            yesterday_data = code_df[code_df['Date'] == yesterday]
+            today_data = code_df[code_df['Date'] == today]
+            
+            if not yesterday_data.empty and not today_data.empty:
+                price_t = yesterday_data.iloc[0]['Close']
+                price_t1 = today_data.iloc[0]['Close']
+                actual_trends[stock_code] = "상승" if price_t1 > price_t else "하락"
+        
+        # 각 예측 채점
+        graded_count = 0
+        for pred in pending_predictions:
+            stock_code = pred['stock_code']
+            if stock_code not in actual_trends:
+                continue
+            
+            actual_trend = actual_trends[stock_code]
+            is_correct = (actual_trend == pred['predicted_trend'])
+            
+            # 예측 결과 업데이트
+            db.table('predict_game').update({
+                'is_checked': True,
+                'actual_trend': actual_trend,
+                'result': is_correct,
+                'points_awarded': None  # 사용자가 수동으로 수령
+            }).eq('id', pred['id']).execute()
+            
+            graded_count += 1
+        
+        return {
+            "message": f"{graded_count}개의 예측이 성공적으로 채점되었습니다.",
+            "graded_count": graded_count,
+            "date": yesterday.isoformat()
+        }
+        
+    except Exception as e:
+        print(f"[ERROR] 자동 채점 실패: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"자동 채점에 실패했습니다. {str(e)}")
+
 @router.post("/claim-points", summary="예측 결과 포인트 수령")
 async def claim_points(req_body: ClaimPointsRequest, request: Request, db: Client = Depends(connect_supabase)):
     """
@@ -399,6 +482,21 @@ async def claim_points(req_body: ClaimPointsRequest, request: Request, db: Clien
             'category': '주가 예측 게임 포인트',
             'point_value': points,
             'path': '주식 예측 게임 결과'
+        }).execute()
+        
+        # 4. 서비스 로그 기록
+        result_text = "정답" if is_correct else "오답"
+        content_text = f"주가 예측 게임 {result_text}: {points}포인트 지급"
+        
+        db.table('service_log').insert({
+            'date': datetime.now().isoformat(),
+            'id': user_id,
+            'ip_address': request.client.host,
+            'category': '포인트 지급',
+            'path': '주식 예측 게임',
+            'quiz_label': None,
+            'content': content_text,
+            'predict_opinion': None
         }).execute()
         
         print(f"[INFO] 포인트 지급 완료 - 사용자: {user_id}, 포인트: {points}, 총 포인트: {new_points}")
