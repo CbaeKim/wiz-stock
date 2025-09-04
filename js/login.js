@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 회원가입 이동
   signupBtn?.addEventListener("click", () => {
-    location.href = "/";
+    location.href = "./sign_up.html";
   });
 
   // ===== 로그아웃 처리 =====

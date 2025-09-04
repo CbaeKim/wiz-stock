@@ -15,6 +15,9 @@
 #     - category   : "shop" 고정
 #     - timestamp  : ISO-8601(UTC) 문자열
 #     - ip_address : 요청한 클라이언트의 IP
+#
+#   service_log(date, id, ip_address, category, path, content, quiz_label, predict_opinion)
+#     - 상점 행동 이력(서비스 이벤트)을 남김 (예: 구매/보상 등)
 # ─────────────────────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, Depends, Request  # FastAPI 라우팅/에러/DI/요청객체
@@ -114,6 +117,41 @@ def _rng_draw(table):
     return table[-1][0]            # 방어: 마지막 보상값 반환
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 유틸: 공통 서비스 로그 기록 (service_log)
+#  - 결제/보상 등 "서비스 이벤트"를 남길 때 사용
+#  - 실패해도 비즈니스 로직을 막지 않도록 try/except로 감쌈
+# ─────────────────────────────────────────────────────────────────────────────
+def _insert_service_log(
+    db: Client,
+    uid: str,
+    request: Request,
+    *,
+    category: str,
+    path: str,
+    content: str,
+    quiz_label: str | None = None,
+    predict_opinion: str | None = None,
+) -> None:
+    payload = {
+        "date": _utcnow(),              # UTC ISO 문자열
+        "id": uid,                      # 유저 ID
+        "ip_address": request.client.host,
+        "category": category,           # 예: "shop"
+        "path": path,                   # 예: "purchase/RNG_BOX_SMALL"
+        "content": content,             # 예: "랜덤박스(소) 구매 -20P (잔액:80P)"
+    }
+    if quiz_label is not None:
+        payload["quiz_label"] = quiz_label
+    if predict_opinion is not None:
+        payload["predict_opinion"] = predict_opinion
+
+    try:
+        db.table("service_log").insert(payload).execute()
+    except Exception as e:
+        # 서비스 로그 실패는 결제/보상 로직을 막지 않음(운영 콘솔만)
+        print("[service_log insert error]", e)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # POST /shop/purchase
 #  - 아이템 구매(포인트 차감) + (해당 시) RNG 보상 지급
 #  - 응답: {"ok": True, "total_point": 최종포인트, "rng_gain": 보상값(없으면 0)}
@@ -134,8 +172,6 @@ def purchase(body: PurchaseBody, request: Request, db: Client = Depends(connect_
     if body.price != server_price:              # 프론트가 보낸 가격과 다르면 실패(조작 방지)
         raise HTTPException(status_code=400, detail="가격 검증 실패")
 
-
-
     # (1) 유저 현재 포인트 조회 -----------------------------------------------
     res = db.table("user_info").select("total_point").eq("id", uid).single().execute()
     if not res.data:                            # 유저가 없으면 404
@@ -147,11 +183,10 @@ def purchase(body: PurchaseBody, request: Request, db: Client = Depends(connect_
     if current < server_price:
         raise HTTPException(status_code=400, detail="포인트가 부족합니다.")
 
-# 포인트 차감(소비) 확정 + 로그(-)
-
-    # (3) AD_COOLDOWN_RESET(광고 시청후 대기시간 생략) / GAME_COOLDOWN_SKIP (게임 재시작 시간 생략)처럼 포인트 차감만 할 경우------
-    #  실제 기능(쿨다운 초기화 등)은 프론트에서 상태를 갱신
+    # (3) 포인트 차감(소비) 확정 + 로그(-) --------------------------------------
+    #  - AD_COOLDOWN_RESET / GAME_COOLDOWN_SKIP처럼 "차감만" 일어나는 케이스 포함
     after_purchase = current - server_price     # 차감 후 포인트 계산
+
     # 3-1) 유저 포인트 업데이트
     db.table("user_info").update({"total_point": after_purchase}).eq("id", uid).execute()
 
@@ -169,7 +204,15 @@ def purchase(body: PurchaseBody, request: Request, db: Client = Depends(connect_
         # 로그가 실패해도 결제 자체는 유효해야 하므로 에러를 삼킴(운영 로그로 남기는 걸 권장)
         print("[point_log insert error - purchase]", e)
 
-    # (4) 랜덤 박스를 구매할 경우 (RNG_TABLE이 있을경우 포인트 차감후 적용하여 포인트 제공)----------------------------------------
+    # 3-3) 서비스 로그: 구매 기록 ------------------------------------------------
+    _insert_service_log(
+        db, uid, request,
+        category="shop",
+        path=f"purchase/{code}",
+        content=f"{body.item_name} 구매 -{server_price}P (잔액:{after_purchase}P)"
+    )
+
+    # (4) 랜덤 박스를 구매할 경우 (RNG_TABLE이 있을경우 포인트 차감후 적용하여 포인트 제공)---
     rng_gain = 0                                # 랜덤 보상 기본값 0
     total_after_effect = after_purchase         # 최종 포인트 초기값(차감만 반영된 상태)
 
@@ -195,10 +238,18 @@ def purchase(body: PurchaseBody, request: Request, db: Client = Depends(connect_
             except Exception as e:
                 print("[point_log insert error - reward]", e)
 
+        # 4-3) 서비스 로그: RNG 보상 기록 (0P라도 이벤트 추적을 위해 남기는 것이 유용)
+        _insert_service_log(
+            db, uid, request,
+            category="shop",
+            path=f"reward/{code}",
+            content=f"{body.item_name} 보상 +{rng_gain}P (잔액:{total_after_effect}P)"
+        )
+
     # (5) 최종 응답 -------------------------------------------------------------
     #  - 프론트는 total_point만 화면에 반영(프론트에서 직접 더하지 않음)
     return {
-        "ok": True,                       # 성공 플래그
+        "ok": True,                        # 성공 플래그
         "total_point": total_after_effect, # 서버 기준 최종 포인트(차감+보상 포함)
-        "rng_gain": rng_gain              # RNG 보상값(없으면 0)
+        "rng_gain": rng_gain               # RNG 보상값(없으면 0)
     }

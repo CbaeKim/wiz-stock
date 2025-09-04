@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>회원가입 - 위즈주식</title>
+  <link rel="stylesheet" href="./css/login_style.css" />
+  <link rel="stylesheet" href="./css/sign_up_style.css" />
+</head>
+<body>
+  <div class="login-container">
+    <form id="signupForm" novalidate>
+      <!-- 카드 안쪽 상단으로 이동 -->
+      <h2 class="title">
+        <span class="lock-icon">📝</span>
+        위즈주식 회원가입
+      </h2>
+
+      <!-- 아이디 -->
+      <div class="input-group">
+        <label for="username">아이디</label>
+        <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" autocomplete="username" required />
+      </div>
+
+      <!-- 닉네임 -->
+      <div class="input-group">
+        <label for="nickname">닉네임</label>
+        <input type="text" id="nickname" name="nickname" placeholder="닉네임을 입력하세요" required />
+      </div>
+
+      <!-- 비밀번호 -->
+      <div class="input-group password-group">
+        <label for="password">비밀번호</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" autocomplete="new-password" required />
+          <button type="button" class="eye-btn" data-target="password" aria-label="비밀번호 보이기">
+            <img class="eye-icon" src="../images/icon_close_eye.png" alt="비밀번호 숨기기" />
+          </button>
+        </div>
+        <ul class="pw-rules" id="pwRules">
+          <li data-rule="len">8자 이상</li>
+          <li data-rule="num">숫자 포함</li>
+          <li data-rule="eng">영문 포함</li>
+          <li data-rule="spc">특수문자 포함</li>
+        </ul>
+      </div>
+
+      <!-- 비밀번호 확인 -->
+      <div class="input-group password-group">
+        <label for="confirm">비밀번호 확인</label>
+        <div class="pw-wrap">
+          <input type="password" id="confirm" name="confirm" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required />
+          <button type="button" class="eye-btn" data-target="confirm" aria-label="비밀번호 보이기">
+            <img class="eye-icon" src="../images/icon_close_eye.png" alt="비밀번호 숨기기" />
+          </button>
+        </div>
+        <p class="hint" id="confirmHint"></p>
+      </div>
+
+      <!-- 메시지 -->
+      <p id="errorBox" class="alert alert-error" hidden></p>
+      <p id="successBox" class="alert alert-success" hidden></p>
+
+      <!-- 액션 -->
+      <div class="button-group">
+        <button type="submit" id="submitBtn" class="signup-button">회원가입 완료</button>
+        <button type="button" id="goLoginBtn" class="login-button ghost">로그인 페이지로</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="../js/sign_up.js" defer></script>
+</body>
+</html>
+
