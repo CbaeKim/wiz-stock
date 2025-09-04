@@ -130,7 +130,6 @@ def macd_diff_accel(df: pd.DataFrame,
     accel = diff.diff()
     return pd.Series(accel, index=df.index, name=out_col)
 
-
 def macd_soft_score(df: pd.DataFrame,
                     macd_col: str = "MACD",
                     sig_col: str = "MACD_Signal",
@@ -149,7 +148,6 @@ def macd_soft_score(df: pd.DataFrame,
                    (df[denom_col].replace(0, np.nan) + eps))
     score = np.tanh(raw) * scale
     return pd.Series(score, index=df.index, name=out_col)
-
 
 def get_bollinger_bands(df, close_col, ma_value = 20, visualization = False):
     """ 
@@ -329,7 +327,6 @@ def get_obv(df, close_col, volume_col):
 
     return pd.Series(obv, index = df.index)
 
-# 골든 크로스, 데드 크로스 함수
 def get_cross_signal(df, short_ma_col, long_ma_col):
     """
     단기 및 장기 이동평균선을 기반으로 골든크로스, 데드크로스 신호를 계산합니다.
