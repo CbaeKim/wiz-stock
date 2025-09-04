@@ -155,8 +155,6 @@ def run_predictive_modeling():
             'predict_date': datetime.now().strftime('%Y-%m-%d'),
             'trend_predict': predicted_trend,
             'price_predict': predicted_price,
-            'trend_accuracy': 0.0,
-            'price_rmse': 0.0,
             'top_feature': top_feature
         })
 
