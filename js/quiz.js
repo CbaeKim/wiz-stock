@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 로그인 상태 확인 로직 (localStorage 사용) ---
+    const userId = localStorage.getItem('user_id');
+
+    // 'user_id'가 스토리지에 없으면 로그인 페이지로 리디렉션합니다.
+    if (!userId) {
+        alert('로그인이 필요한 서비스입니다.');
+        window.location.href = './pages/login.html'; 
+        return; // 리디렉션 후 아래 코드 실행을 중단합니다.
+    }
+    // --- 여기까지 ---
+
     // --- DOM 요소 ---
     const mainContentContainer = document.getElementById('main-content-container');
 
@@ -9,9 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedTopic = '';
     
     // --- 로그인 연동 ---
-    // 세션 스토리지에서 'user_id' 값을 가져옵니다.
-    // 만약 로그인 페이지를 거치지 않아 값이 없다면, 테스트를 위해 임시 ID를 사용합니다.
-    const userId = sessionStorage.getItem('user_id') || 'gildong_hong@gmail.com'; 
     console.log(`현재 사용자 ID: ${userId}`); // 개발자 도구 콘솔에서 확인용
 
     /**

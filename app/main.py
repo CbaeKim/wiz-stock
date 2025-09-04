@@ -10,7 +10,7 @@ from app.dependency.connect_supabase import connect_supabase
 import asyncio, subprocess
 
 # add router files
-from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock
+from app.routers import login, quiz, mypage_router, sign_up, point, shop_router, pred_stock, ranking
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -69,12 +69,10 @@ app.include_router(sign_up.router)
 app.include_router(point.router)
 app.include_router(shop_router.router)
 app.include_router(pred_stock.router)
+app.include_router(ranking.router)
 
-
-# --- ✨✨✨ 이 부분이 중요합니다 ✨✨✨ ---
 
 # 1. 정적 파일 폴더 마운트
-# /js URL을 실제 js 폴더에, /pages URL을 실제 pages 폴더에 연결합니다.
 app.mount("/js", StaticFiles(directory="js"), name="js")
 app.mount("/pages", StaticFiles(directory="pages"), name="pages")
 app.mount("/images", StaticFiles(directory="images"), name="images")
@@ -83,7 +81,7 @@ app.mount("/images", StaticFiles(directory="images"), name="images")
 def index_alias():
     return RedirectResponse(url="/", status_code=308)
 
+# 모든 요청에 index.html을 반환하도록 변경
 @app.get("/", include_in_schema=False)
 def serve_root():
     return FileResponse(BASE_DIR / "index.html")
-

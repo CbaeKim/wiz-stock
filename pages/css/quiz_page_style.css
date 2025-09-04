@@ -1,28 +1,43 @@
-/* --- 기본 폰트 및 레이아웃 --- */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+/* =================================================================
+   QUIZ PAGE - 퀴즈 페이지 전용 스타일
+   ================================================================= */
 
+/* 퀴즈 페이지 테마 색상 */
+:root {
+    --quiz-bg-primary: #1a242f;
+    --quiz-bg-secondary: #243140;
+    --quiz-accent: #ffd700;
+    --quiz-text: #ffffff;
+    --quiz-text-muted: #b0b8c4;
+    --quiz-success: #28a745;
+    --quiz-danger: #dc3545;
+    --quiz-card-bg: #2c3e50;
+}
+
+/* 퀴즈 페이지 배경 오버라이드 */
 body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background-color: #1a242f;
-    color: #ffffff;
-    display: flex;
+    margin: 0;
+    padding: 0;
+    background-color: var(--quiz-bg-primary);
+    color: var(--quiz-text);
+    height: 100vh;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 .content {
-    margin-left: 20vw; /* 사이드바 너비 */
-    width: 80vw;
-    padding: 40px;
-    box-sizing: border-box;
+    background-color: var(--quiz-bg-primary);
+    color: var(--quiz-text);
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    height: 100vh;
-    overflow-y: auto;
+    padding-top: 20px;
 }
 
-.content-container {
+/* 메인 콘텐츠 컨테이너 */
+.main-content-container {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     text-align: center;
 }
 
