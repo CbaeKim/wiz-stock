@@ -373,11 +373,11 @@ async def claim_points(req_body: ClaimPointsRequest, request: Request, db: Clien
         user_id = prediction['user_id']
         
         # 사용자 포인트 업데이트
-        user_res = db.table('user_info').select('point').eq('id', user_id).execute()
+        user_res = db.table('user_info').select('total_point').eq('id', user_id).execute()
         if not user_res.data:
             raise HTTPException(status_code=404, detail="사용자 정보를 찾을 수 없습니다.")
         
-        current_points = user_res.data[0]['point'] or 0
+        current_points = user_res.data[0]['total_point'] or 0
         new_points = current_points + points
         
         # 트랜잭션처럼 처리
@@ -388,7 +388,7 @@ async def claim_points(req_body: ClaimPointsRequest, request: Request, db: Clien
         
         # 2. 사용자 포인트 업데이트
         db.table('user_info').update({
-            'point': new_points
+            'total_point': new_points
         }).eq('id', user_id).execute()
         
         # 3. 포인트 로그 기록
