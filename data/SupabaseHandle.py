@@ -1,11 +1,18 @@
 import pandas as pd
 import numpy as np
+import os
+from pathlib import Path
 from supabase import Client, create_client
+from dotenv import load_dotenv
 
+# Define Endpoint URL, API
+current_path = Path.cwd()
+env_path = current_path / '.env'
 
-# 엔드포인트 URL 및 API 키 설정
-SUPABASE_URL = 'https://yhayrbotkkuuvoxzhqct.supabase.co'
-SUPABASE_KEY = 'sb_secret_5rUltxbkuiB3wFcTyMs1qw_cJHFo3kf'
+load_dotenv(env_path)
+
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 
 # 클라이언트 연결
 try:
